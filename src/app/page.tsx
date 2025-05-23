@@ -1,9 +1,15 @@
-import Image from "next/image";
+"use server"
+import CategorySection from "@/components/CategoryCarousel";
+import { HydrateClient, trpc } from "@/server/server";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
- 
-    </div>
-  );
-}
+export default async function Home() {
+    await trpc.category.getAll.prefetch();
+    
+    return (  
+        <main className="container mx-auto py-8">
+            <h1 className="text-3xl font-bold mb-6">Bienvenido</h1>
+            <HydrateClient>
+                <CategorySection />
+            </HydrateClient>
+        </main>
+    )}
