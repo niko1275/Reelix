@@ -1,5 +1,5 @@
 import db from './db';
-import { users } from '../schemas/schema';
+import { users } from './schema';
 
 async function testConnection() {
   try {

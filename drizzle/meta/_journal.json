@@ -15,6 +15,41 @@
       "when": 1747883722236,
       "tag": "0001_swift_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1748040496047,
+      "tag": "0002_shallow_moon_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1748132459264,
+      "tag": "0003_zippy_scarecrow",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1748387884869,
+      "tag": "0004_concerned_captain_cross",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1748387991089,
+      "tag": "0005_round_preak",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1748481836563,
+      "tag": "0006_workable_nitro",
+      "breakpoints": true
     }
   ]
 }

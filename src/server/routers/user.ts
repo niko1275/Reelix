@@ -49,8 +49,8 @@ export const userRouter = router({
           name: input.name,
           email: input.email,
           imageUrl: '', // Esto debería venir de Clerk
-          createdAt: new Date(),
-          updatedAt: new Date(),
+         
+    
         });
       } else {
         // Si existe, lo actualizamos

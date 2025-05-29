@@ -38,15 +38,15 @@ const  CategoryCarousel =() => {
 
 
   return (
-    <div className="w-full">
+    <div className="w-full flex justify-center">
       <Carousel
         opts={{
           align: "start",
           loop: true,
         }}
-        className="w-full"
+        className="w-3/4"
       >
-        <CarouselContent>
+        <CarouselContent className="">
           {categories.map((category) => (
             <CarouselItem key={category.id} className="md:basis-1/4 lg:basis-1/6">
               <div className="p-1">

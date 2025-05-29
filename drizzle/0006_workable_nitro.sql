@@ -1,0 +1,1 @@
+ALTER TABLE "videos" ADD COLUMN "playback_id" text NOT NULL;
