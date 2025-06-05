@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils"
 import { trpc } from "@/utils/trpc"
 import { Suspense } from "react"
 
-
 export default function CategorySection() {
   return (
    <Suspense fallback={<div>Loading categories...</div>}>
@@ -23,44 +22,56 @@ export default function CategorySection() {
   )
 }
 
-const  CategoryCarousel =() => {
+const CategoryCarousel = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const selectedCategory = searchParams.get("category")
   const [categories] = trpc.category.getAll.useSuspenseQuery()
 
-  const handleCategoryClick = (slug: string) => {
+  const handleCategoryClick = (categoryId: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    params.set("category", slug)
+    if (selectedCategory === categoryId) {
+      params.delete("category")
+    } else {
+      params.set("category", categoryId)
+    }
     router.push(`?${params.toString()}`)
   }
 
-
+  const handleSearch = (searchTerm: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (searchTerm) {
+      params.set("search", searchTerm);
+    } else {
+      params.delete("search");
+    }
+    router.push(`?${params.toString()}`);
+  };
 
   return (
-    <div className="w-full flex justify-center">
+    <div className="w-full px-2 sm:px-4 md:px-6 flex justify-center">
       <Carousel
         opts={{
           align: "start",
           loop: true,
         }}
-        className="w-3/4"
+        className="w-full max-w-[90vw] sm:max-w-[80vw] md:max-w-[70vw]"
       >
-        <CarouselContent className="">
+        <CarouselContent>
           {categories.map((category) => (
-            <CarouselItem key={category.id} className="md:basis-1/4 lg:basis-1/6">
+            <CarouselItem key={category.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
               <div className="p-1">
                 <Card 
                   className={cn(
                     "cursor-pointer transition-colors hover:bg-accent",
-                    selectedCategory === category.name.toLowerCase() && "bg-accent"
+                    selectedCategory === category.id.toString() && "bg-accent"
                   )}
-                  onClick={() => handleCategoryClick(category.name.toLowerCase())}
+                  onClick={() => handleCategoryClick(category.id.toString())}
                 >
-                  <CardContent className="flex items-center justify-center p-4">
+                  <CardContent className="flex items-center justify-center p-2 sm:p-3 md:p-4">
                     <span className={cn(
-                      "text-lg font-medium",
-                      selectedCategory === category.name.toLowerCase() && "text-foreground"
+                      "text-sm sm:text-base md:text-lg font-medium text-center break-words",
+                      selectedCategory === category.id.toString() && "text-foreground"
                     )}>
                       {category.name}
                     </span>
@@ -70,8 +81,8 @@ const  CategoryCarousel =() => {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
+        <CarouselPrevious className="hidden sm:flex" />
+        <CarouselNext className="hidden sm:flex" />
       </Carousel>
     </div>
   )

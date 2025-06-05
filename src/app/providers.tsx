@@ -18,7 +18,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [trpcClient] = useState(() => createTRPCClient());
 
   return (
-    <ClerkProvider>
+    <ClerkProvider
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+         
+        >
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           {children}

@@ -12,7 +12,7 @@ export default async function StudioPage() {
     return (
        <HydrateClient>
      
-        <Suspense fallback={<div>Loading videos...</div>}>
+            <Suspense fallback={<div>Loading videos...</div>}>
 
             <ErrorBoundary fallback={<div>Something went wrong loading your videos</div>}>
                 <VideoSection />

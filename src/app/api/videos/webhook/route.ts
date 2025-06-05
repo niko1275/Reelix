@@ -78,6 +78,15 @@ export async function POST(req: NextRequest) {
                 }
                 const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
                 
+                // Buscar el video existente por upload_id
+                const existingVideo = await db.query.videos.findFirst({
+                    where: eq(videos.muxUploadId, readyData.upload_id)
+                });
+
+                if (!existingVideo) {
+                    throw new Error("No video found for this upload");
+                }
+
                 await db.update(videos)
                     .set({
                         muxStatus: readyData.status,

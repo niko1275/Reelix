@@ -4,7 +4,7 @@ import { trpc } from "@/utils/trpc"
 import type { inferRouterOutputs } from "@trpc/server"
 import type { AppRouter } from "@/server/routers/_app"
 import { Button } from "@/components/ui/button"
-import { Loader2, Eye, Clock, Calendar } from "lucide-react"
+import { Loader2, Eye, Clock, Calendar, LockOpen, LockOpenIcon, LockIcon } from "lucide-react"
 import { 
     Table, 
     TableBody, 
@@ -17,9 +17,7 @@ import { StudioCargarModal } from "../studio/Studio-Cargar-Modal"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import VideoThumbnail from "../studio/VideoThumnail"
-import Link from "next/link"
 
-type Video = inferRouterOutputs<AppRouter>["video"]["getMany"]["items"][0]
 
 export default function VideoSection() {
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = trpc.video.getMany.useInfiniteQuery({
@@ -46,56 +44,82 @@ export default function VideoSection() {
             </div>
 
             <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Thumbnail</TableHead>
-                        <TableHead className="w-[300px]">Título</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead>Vistas</TableHead>
-                        <TableHead>Duración</TableHead>
-                        <TableHead>Fecha</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {videos.map((video) => (
-                        <Link href={`/studio/videos/${video.muxUploadId}`} key={video.id}>
-                        <TableRow key={video.id}>
-                            <TableCell>
-                                <VideoThumbnail imageUrl={video.thumbnailUrl} />
-                            </TableCell>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[120px]">Thumbnail</TableHead>
+          <TableHead className="w-[300px]">Título</TableHead>
+          <TableHead className="w-[300px]">Visibilidad</TableHead>
+          <TableHead className="w-[120px]">Estado</TableHead>
+          <TableHead className="w-[100px]">Vistas</TableHead>
+          <TableHead className="w-[100px]">Duración</TableHead>
+          <TableHead className="w-[180px]">Fecha</TableHead>
+        </TableRow>
+      </TableHeader>
 
-                            <TableCell className="font-medium">
-                                {video.title}
-                            </TableCell>
-                            <TableCell>
-                                <span className={`px-2 py-1 rounded-full text-xs ${
-                                    video.isPublished 
-                                        ? "bg-green-100 text-green-800" 
-                                        : "bg-yellow-100 text-yellow-800"
-                                }`}>
-                                    {video.isPublished ? "Publicado" : "Borrador"}
-                                </span>
-                            </TableCell>
-                            <TableCell className="flex items-center gap-1">
-                                <Eye className="h-4 w-4" />
-                                {video.views}
-                            </TableCell>
-                            <TableCell className="flex items-center gap-1">
-                                <Clock className="h-4 w-4" />
-                                {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}
-                            </TableCell>
-                            <TableCell className="flex items-center gap-1">
-                                <Calendar className="h-4 w-4" />
-                                {formatDistanceToNow(new Date(video.createdAt), { 
-                                    addSuffix: true,
-                                    locale: es 
-                                })}
-                            </TableCell>
-                        </TableRow>
-                        </Link>
-                    ))}
-                </TableBody>
-            </Table>
+      <TableBody>
+        {videos.map((video) => (
+          <TableRow
+            key={video.id}
+            className="cursor-pointer hover:bg-muted transition"
+            onClick={() => window.location.href = `/studio/videos/${video.muxUploadId}`}
+          >
+            <TableCell>
+              <VideoThumbnail imageUrl={video.thumbnailUrl} />
+            </TableCell>
+
+            <TableCell className="font-medium">{video.title}</TableCell>
+
+            <TableCell>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                video.isPublished
+                  ? "bg-green-100 text-green-800"
+                  : "bg-yellow-100 text-yellow-800"
+              }`}>
+                {video.isPublished ? "Publicado" : "Borrador"}
+              </span>
+            </TableCell>
+
+            
+            <TableCell >
+            <div className="flex items-center gap-1">
+          {video.visibility}
+              {video.visibility === "PUBLIC" ? (
+                <LockIcon className="h-4 w-4" />
+              ) : (
+                <LockOpenIcon className="h-4 w-4" />
+              )}
+            </div>
+             
+            </TableCell>
+
+            <TableCell >
+              <div className="flex items-center gap-1">
+              <Eye className="h-4 w-4" />
+              {video.views}
+              </div>
+             
+            </TableCell>
+
+            <TableCell className="">
+              <div className="flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              {Math.floor(video.duration / 60)}:
+              {(video.duration % 60).toString().padStart(2, '0')}
+              </div>
+             
+            </TableCell>
+
+            <TableCell className="flex items-center gap-1 mt-4 ">
+              <Calendar className="h-4 w-4" />
+              {formatDistanceToNow(new Date(video.createdAt), {
+                addSuffix: true,
+                locale: es
+              })}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
 
             {hasNextPage && (
                 <div className="flex justify-center mt-4">

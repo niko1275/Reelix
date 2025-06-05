@@ -50,6 +50,8 @@ export async function createUser(data: {
                 name: data.name,
                 email: data.email,
                 imageUrl: data.imageUrl,
+                bannerUrl: "",
+                bannerKey: "",
             })
             .returning();
 

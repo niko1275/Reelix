@@ -1,11 +1,11 @@
 "use client"
 
 import { trpc } from "@/utils/trpc"
-import { Suspense } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { Button } from "../ui/button"
 import { DropdownMenu } from "@radix-ui/react-dropdown-menu"
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
-import { MoreHorizontalIcon, MoreVerticalIcon, TrashIcon } from "lucide-react"
+import { Copy, FolderLock, MoreHorizontalIcon, MoreVerticalIcon, TrashIcon } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FormProvider, useForm } from "react-hook-form"
 import { z } from "zod"
@@ -17,25 +17,26 @@ import { Textarea } from "../ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { toast } from "sonner"
 import { VideoPlayer } from "./VideoPlayer"
+import { ThumbnailUpload } from "./ThumbnailUpload"
+import { Data } from "@mux/mux-node/resources/index.mjs"
 
 type Video = InferModel<typeof videos>
 
+// Creamos un tipo para los campos que queremos actualizar
+type VideoFormData = {
+    title?: string
+    description?: string | null
+    thumbnailUrl?: string | null
+    isPublished?: boolean
+    categoryId?: number | null
+}
+
 const formSchema = z.object({
-    id: z.number().optional(),
     title: z.string().optional(),
     description: z.string().nullable().optional(),
-    videoUrl: z.string().optional(),
-    thumbnailUrl: z.string().optional(),
-    duration: z.number().optional(),
-    views: z.number().optional(),
+    thumbnailUrl: z.string().nullable().optional(),
     isPublished: z.boolean().optional(),
-    userId: z.string().optional(),
-    muxAssetId: z.string().optional(),
-    muxStatus: z.string().optional(),
-    muxUploadId: z.string().optional(),
-    createdAt: z.date().optional(),
-    updatedAt: z.date().optional(),
-    categoryId: z.number().nullable().optional()
+    categoryId: z.number().nullable().optional(),
 })
 
 interface FormSectionProps {
@@ -54,19 +55,39 @@ const FormSection = ({ videoId }: FormSectionProps) => {
     const { data: video, isLoading } = trpc.video.getById.useQuery({
         id: videoId
     })
-
+    const [copied, setCopied] = useState(false)
     const { data: categories } = trpc.category.getAll.useQuery()
 
     const utils = trpc.useUtils()
 
-    const form = useForm<Partial<Video>>({
+    const handleCopy = () => {
+        navigator.clipboard.writeText(`http://localhost:3000/videos/${video?.muxUploadId}`)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+    }
+
+    const form = useForm<VideoFormData>({
         resolver: zodResolver(formSchema),
-        defaultValues: video && video.length > 0 ? {
-            ...video[0],
-            createdAt: new Date(video[0].createdAt),
-            updatedAt: new Date(video[0].updatedAt)
+        defaultValues: video ? {
+            title: video.title,
+            description: video.description,
+            thumbnailUrl: video.thumbnailUrl,
+            isPublished: video.isPublished,
+            categoryId: video.categoryId,
         } : undefined
     });
+
+    useEffect(() => {
+        if (video) {
+            form.reset({
+                title: video.title,
+                description: video.description,
+                thumbnailUrl: video.thumbnailUrl,
+                isPublished: video.isPublished,
+                categoryId: video.categoryId,
+            });
+        }
+    }, [video, form]);
 
     const { mutate: updateVideo, isPending } = trpc.video.update.useMutation({
         onSuccess: () => {
@@ -78,12 +99,21 @@ const FormSection = ({ videoId }: FormSectionProps) => {
         }
     })
 
-    const onSubmit = (data: Partial<Video>) => {
-        if (!video?.[0]?.id) return
+    const onSubmit = (data: VideoFormData) => {
+        if (!video?.id) return
 
         updateVideo({
-            id: video[0].id,
+            id: video.id,
             ...data
+        })
+    }
+
+    const onThumbnailChange = async (url: string) => {
+        if (!video?.id) return
+
+        updateVideo({
+            id: video.id,
+            thumbnailUrl: url
         })
     }
 
@@ -91,7 +121,7 @@ const FormSection = ({ videoId }: FormSectionProps) => {
         return <div>Loading...</div>
     }
 
-    if (!video || video.length === 0) {
+    if (!video) {
         return <div>No video found</div>
     }
 
@@ -133,7 +163,7 @@ const FormSection = ({ videoId }: FormSectionProps) => {
                                     <FormItem>
                                         <FormLabel>Titulo</FormLabel>
                                         <FormControl> 
-                                            <Input {...field} placeholder="Añade un titulo para tu video"/>
+                                            <Input {...field} value={field.value ?? ""} placeholder="Añade un titulo para tu video"/>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -148,7 +178,7 @@ const FormSection = ({ videoId }: FormSectionProps) => {
                                         <FormControl> 
                                             <Textarea 
                                                 {...field} 
-                                                value={field.value ?? ''}
+                                                value={field.value ?? ""}
                                                 placeholder="Añade una descripción para tu video"
                                                 className="resize-none"
                                             />
@@ -164,15 +194,17 @@ const FormSection = ({ videoId }: FormSectionProps) => {
                                     <FormItem>
                                         <FormLabel>Categoría</FormLabel>
                                         <Select 
+                                            
                                             onValueChange={(value) => field.onChange(Number(value))}
                                             defaultValue={field.value?.toString()}
+                                            value={video.categoryId?.toString() ?? ""}
                                         >
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Selecciona una categoría" />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent>
+                                            <SelectContent >
                                                 {categories?.map((category) => (
                                                     <SelectItem 
                                                         key={category.id} 
@@ -187,22 +219,95 @@ const FormSection = ({ videoId }: FormSectionProps) => {
                                     </FormItem>
                                 )}
                             />
+
+                            
+                        <div className="flex flex-col gap-2">
+                                <p className="text-sm text-gray-500 font-bold">
+                                    Thumbnail
+                                </p>
+                                <FormField
+                                    control={form.control}
+                                    name="thumbnailUrl"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <ThumbnailUpload
+                                                    value={field.value ?? ""}
+                                                    onChange={onThumbnailChange}
+                                                    disabled={isPending}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
                         </div>
                         <div className="space-y-8 lg:col-span-2">
                             <div className="flex flex-col gap-4 bg-gray-200 p-4 rounded-md">
                                 <div className="aspect-video rounded-md overflow-hidden">
-                                    
-                                    <VideoPlayer thumnailurl={video[0].thumbnailUrl}
-                                     playbackId={video[0].playbackId} autoplay={false}/>
+                                    <VideoPlayer thumnailurl={video.thumbnailUrl}
+                                     playbackId={video.playbackId} autoplay={false}/>
                                 </div>
                                 <div className="flex flex-col gap-2 ">
+                                <p className="text-sm text-blue-600 p-0 flex flex-wrap gap-2 break-all whitespace-normal">
+                                    {`localhost:3000/videos/${video.muxUploadId}`}
+                                    <button
+                                        onClick={handleCopy}
+                                        className="flex items-center gap-1 text-gray-500 hover:text-blue-600"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                        {copied ? "Copiado" : "Copiar"}
+                                    </button>
+                                    </p>
+                                    
                                     <p className="text-sm text-gray-500">
                                         Video status
                                     </p>
                                     <p className="font-bold">
-                                        {video[0].muxStatus}
+                                        {video.muxStatus}
                                     </p>
                                 </div>
+                            </div>
+
+
+                            <div className="flex flex-col gap-2">
+                                <p className="text-sm text-gray-500 font-bold">
+                                    Visibilidad
+                                </p>
+                                <FormField
+                                    control={form.control}
+                                    name="isPublished"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Select
+                                                onValueChange={(value) => field.onChange(value === "public")}
+                                                defaultValue={field.value ? "public" : "private"}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Selecciona una visibilidad" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="public">
+                                                        <div className="flex items-center gap-2">
+                                                            <FolderLock className="w-4 h-4"/>
+                                                            <span>Público</span>
+                                                        </div>
+                                                    </SelectItem>
+                                                    <SelectItem value="private">
+                                                        <div className="flex items-center gap-2">
+                                                            <FolderLock className="w-4 h-4"/>
+                                                            <span>Privado</span>
+                                                        </div>
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             </div>
                         </div>
                     </div>
