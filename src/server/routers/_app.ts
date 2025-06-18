@@ -7,6 +7,7 @@ import { videoReactionsRouter } from './videoReaction';
 import { subscriptionsRouter } from './suscriptores';
 import { commentsRouter } from './comments';
 import { playlistRouter } from './playlist';
+import { watchHistoryRouter } from './WatchHistory';
 
 export const appRouter = router({
   user: userRouter,
@@ -17,6 +18,7 @@ export const appRouter = router({
   subscriptions: subscriptionsRouter,
   comments: commentsRouter,
   playlist: playlistRouter,
+  watchHistory: watchHistoryRouter,
 });
 
 export type AppRouter = typeof appRouter; 

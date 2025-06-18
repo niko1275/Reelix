@@ -1,7 +1,7 @@
 "use client"
 
 import { trpc } from "@/utils/trpc"
-import { Suspense, useEffect } from "react"
+import { Suspense, useEffect, useRef } from "react"
 import { VideoPlayer, VideoPlayerSkeleton } from "../studio/VideoPlayer"
 import { VideoBanner } from "./video-banner"
 import { VideoTopRow, VideoTopRowSkeleton } from "./video-top-row"
@@ -9,6 +9,8 @@ import VideoDescription from "./video-description"
 import { VideoComments } from "./video-comments"
 import { type videos } from "@/lib/db/schema"
 import { type InferSelectModel } from "drizzle-orm"
+import { VideoViewTracker } from "@/components/video/VideoViewTracker"
+import { useAuth } from "@clerk/nextjs"
 
 interface VideoViewProps {
     videoId: string
@@ -37,6 +39,7 @@ function VideoViewContent({videoId}: VideoViewProps) {
     const [video] = trpc.video.getone.useSuspenseQuery({id: videoId}) as unknown as [Video & { isOwner: boolean }]
     const addView = trpc.video.addView.useMutation()
     const utils = trpc.useUtils()
+    const { userId } = useAuth()
    
     const handleVideoStart = () => {
         addView.mutate(
@@ -60,6 +63,7 @@ function VideoViewContent({videoId}: VideoViewProps) {
                     onPlay={handleVideoStart}
                 />
                 <VideoBanner status={video.muxStatus} />
+                {userId && <VideoViewTracker videoId={video.id} />}
             </div>
         
             <VideoTopRow video={video} />

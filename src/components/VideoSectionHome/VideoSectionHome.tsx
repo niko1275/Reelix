@@ -1,10 +1,52 @@
 "use client"
 import { trpc } from "@/utils/trpc"
 import { JSX, Suspense } from "react";
-import { VideoCard } from "@/components/users/VideoCard";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { VideoCard } from "../VideoCard/VideoCard";
+
+
+export interface VideoWithUserAndStats {
+    id: number;
+    title: string;
+    description: string;
+    videoUrl: string;
+    thumbnailUrl: string;
+    duration: number;
+    views: number;
+    isPublished: boolean;
+    userId: string;
+    muxAssetId: string;
+    muxStatus: string;
+    muxUploadId: string;
+    categoryId: number;
+    createdAt: string;
+    updatedAt: string;
+    playbackId: string;
+    visibility: 'public' | 'private' | 'unlisted';
+  
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      clerkId: string;
+      imageUrl: string;
+      createdAt: string;
+      updatedAt: string;
+      bannerUrl: string;
+      bannerKey: string;
+      subscribersCount: number;
+      isSubscribed: boolean;
+    };
+  
+    stats: {
+      views: number;
+      likes: number;
+      dislikes: number;
+      userReaction: 'like' | 'dislike' | null;
+    };
+}
 
 const VideoSkeleton = () => {
     return (
@@ -52,23 +94,18 @@ const VideoSectionQuery = (): JSX.Element => {
 
     const videos = data?.pages.flatMap((page) => page.items) || [];
 
+    console.log("🧪 videos:", JSON.stringify(videos, null, 2))
+
     return (
         <div className="space-y-4 mt-10 mx-20">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {videos.map((video) => (
-                    <Link href={`/videos/${video.muxUploadId}`} key={video.id}>
-                        <VideoCard 
-                            id={video.id}
-                            title={video.title}
-                            thumbnailUrl={video.thumbnailUrl}
-                            createdAt={video.createdAt}
-                        
-                            duration={video.duration}
-                            views={video.views}
-                            publishedAt={video.publishedAt}
-                        
+                    
+                        <VideoCard
+                            key={video.id}
+                            video={video as VideoWithUserAndStats}
                         />
-                    </Link>
+                  
                 ))}
             </div>
             {hasNextPage && (

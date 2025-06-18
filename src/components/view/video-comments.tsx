@@ -7,7 +7,7 @@ import { useAuth } from "@clerk/nextjs"
 import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
-import { MessageCircle, Reply, Edit, Trash2 } from "lucide-react"
+import { MessageCircle, Reply, Edit, Trash2, ThumbsUp, ThumbsDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface VideoCommentsProps {
@@ -21,12 +21,12 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [editingComment, setEditingComment] = useState<number | null>(null)
   const [editContent, setEditContent] = useState("")
-
+  console.log("🧪 videoId: en comentarios", videoId);
   const { data: comments, isLoading } = trpc.comments.getVideoComments.useQuery(
     { videoId },
     { enabled: !!videoId }
   )
-
+ 
   const { mutate: createComment, isPending: isCreating } = trpc.comments.createComment.useMutation({
     onSuccess: () => {
       setComment("")
@@ -126,11 +126,36 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
     )
   }
 
-  const CommentItem = ({ comment }: { comment: any }) => {
+  const CommentItem = ({ comment, isReply = false, isNestedReply = false }: { 
+    comment: any, 
+    isReply?: boolean,
+    isNestedReply?: boolean 
+  }) => {
     const isEditing = editingComment === comment.id
+    const { data: reactions } = trpc.comments.getCommentReactions.useQuery(
+      { commentId: comment.id },
+      { enabled: !!comment.id }
+    )
+
+    const { mutate: toggleReaction } = trpc.comments.toggleReaction.useMutation({
+      onSuccess: () => {
+        utils.comments.getCommentReactions.invalidate({ commentId: comment.id })
+      },
+      onError: (error) => {
+        toast.error(error.message || "Error al actualizar la reacción")
+      }
+    })
+
+    const handleReaction = (type: 'like' | 'dislike') => {
+      if (!userId) {
+        toast.error("Debes iniciar sesión para reaccionar")
+        return
+      }
+      toggleReaction({ commentId: comment.id, type })
+    }
 
     return (
-      <div className="flex gap-4 py-4">
+      <div className={cn("flex gap-4 py-4", isReply && "ml-8 border-l-2 pl-4")}>
         <Avatar className="h-10 w-10">
           <AvatarImage src={comment.user.imageUrl} />
           <AvatarFallback>{comment.user.name}</AvatarFallback>
@@ -154,12 +179,43 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
             />
           ) : (
             <>
+              {isNestedReply && comment.replyingTo && (
+                <p className="text-sm text-muted-foreground">
+                  Respondiendo a <span className="font-medium">@{comment.replyingToUser?.name}</span>
+                </p>
+              )}
               <p className="mt-1">{comment.content}</p>
-              <div className="flex gap-4 mt-2">
+              <div className="flex items-center gap-4 mt-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleReaction('like')}
+                    className={cn(
+                      "flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground",
+                      reactions?.userReaction === 'like' && "text-blue-500"
+                    )}
+                  >
+                    <ThumbsUp className="w-4 h-4" />
+                    {reactions?.likes || 0}
+                  </button>
+                  <button
+                    onClick={() => handleReaction('dislike')}
+                    className={cn(
+                      "flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground",
+                      reactions?.userReaction === 'dislike' && "text-red-500"
+                    )}
+                  >
+                    <ThumbsDown className="w-4 h-4" />
+                    {reactions?.dislikes || 0}
+                  </button>
+                </div>
                 <button
                   onClick={() => {
                     setReplyingTo(comment.id)
-                    setComment("")
+                    if (isReply) {
+                      setComment(`@${comment.user.name} `)
+                    } else {
+                      setComment("")
+                    }
                   }}
                   className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                 >
@@ -191,17 +247,6 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
             </>
           )}
 
-          {/* Respuestas */}
-          {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-4 space-y-4">
-              {comment.replies.map((reply: any) => (
-                <div key={reply.id} className="ml-8">
-                  <CommentItem comment={reply} />
-                </div>
-              ))}
-            </div>
-          )}
-
           {/* Formulario de respuesta */}
           {replyingTo === comment.id && (
             <div className="mt-4">
@@ -210,10 +255,12 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
                   createComment({
                     content,
                     videoId,
-                    parentId: comment.id
+                    parentId: comment.id,
+                    replyingTo: comment.user.clerkId
                   })
                 }}
                 buttonText="Responder"
+                initialValue={isReply ? `@${comment.user.name} ` : ""}
               />
             </div>
           )}
@@ -225,6 +272,28 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
   if (isLoading) {
     return <div>Cargando comentarios...</div>
   }
+
+  // Combinar comentarios principales y respuestas en una sola lista
+  const flattenComments = (comment: any, parentName?: string, isNestedReply = false): any[] => {
+    const result = [{
+      ...comment,
+      isReply: !!parentName,
+      isNestedReply,
+      replyingTo: comment.replyingTo
+    }];
+
+    if (comment.replies && comment.replies.length > 0) {
+      comment.replies.forEach((reply: any) => {
+        result.push(...flattenComments(reply, comment.user.name, true));
+      });
+    }
+
+    return result;
+  };
+
+  const allComments = comments?.reduce((acc: any[], comment: any) => {
+    return [...acc, ...flattenComments(comment)];
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -241,10 +310,16 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
         })
       }} />
 
-      {/* Lista de comentarios */}
+      {/* Lista de comentarios y respuestas */}
       <div className="space-y-4">
-        {comments?.map((comment) => (
-          <CommentItem key={comment.id} comment={comment} />
+        {allComments?.map((comment, index) => (
+          console.log("Comentario item", comment),
+          <CommentItem 
+            key={index} 
+            comment={comment} 
+            isReply={comment.isReply}
+            isNestedReply={comment.isNestedReply}
+          />
         ))}
       </div>
     </div>

@@ -1,31 +1,27 @@
 "use client"
 
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
 
-import { useUser } from "@clerk/nextjs"
+import { useAuth, useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import { Home, SquarePlay, Video, History, ThumbsUp,ListVideo, Compass, PlaySquare, Clock, Flame, Music, Film, Newspaper, Trophy, Lightbulb, Gamepad} from "lucide-react"
-import clsx from "clsx"
 import SidebarHomeMobile from "./SidebarHomeMobile"
-import { Separator } from "./ui/separator"
+
 
 interface SidebarProps {
   isOpen: boolean
 }
 
+
+
 export function SidebarHome({ isOpen }: SidebarProps) {
   const { user } = useUser()
   const { state , isMobile} = useSidebar()
   const isopen2 = state === "expanded"  ? true : false
+
+  const userId = user?.id
   const links = [
     {
       href: "/",
@@ -51,22 +47,35 @@ export function SidebarHome({ isOpen }: SidebarProps) {
       <div className={`py-2 ${isopen2 ? "px-4" : "px-2"}`}>
         {/* Main Navigation */}
         <div className="mb-4">
+          <Link href="/">
           <SidebarItem icon={<Home />} text="Home" isOpen={isopen2} active />
+          </Link>
+         
           <Link href="/subscriptions">
           <SidebarItem icon={<PlaySquare />} text="Subscriptions" isOpen={isopen2} />
           </Link>
    
+
+       
+          <Link href="/playlist">
+          <SidebarItem icon={<PlaySquare />} text="Playlists" isOpen={isopen2} />
+          </Link>
         </div>
         
         <hr className="border-t my-2" />
         
         {/* Library */}
         <div className="mb-4">
-          <SidebarItem icon={<PlaySquare />} text="Library" isOpen={isopen2} />
-          <SidebarItem icon={<Clock />} text="History" isOpen={isopen2} />
-          <SidebarItem icon={<PlaySquare />} text="Your Videos" isOpen={isopen2} />
-          <SidebarItem icon={<Clock />} text="Watch Later" isOpen={isopen2} />
-          <SidebarItem icon={<ThumbsUp />} text="Liked Videos" isOpen={isopen2} />
+          <Link href="/historial">
+            <SidebarItem icon={<Clock />} text="History" isOpen={isopen2} />
+          </Link>
+         
+          <Link href="/studio">
+           <SidebarItem icon={<PlaySquare />} text="Tus Videos" isOpen={isopen2} />
+          </Link>
+          <Link href="/likedvideos">
+          <SidebarItem icon={<ThumbsUp />} text="Videos que me gustaron" isOpen={isopen2} />
+          </Link>
         </div>
         
         <hr className="border-t my-2" />
@@ -83,40 +92,7 @@ export function SidebarHome({ isOpen }: SidebarProps) {
           </div>
         )}
 
-        <hr className="border-t my-2" />
-        
-        {/* Explore */}
-        <div className="mb-4">
-          <h3 className={`text-sm font-medium mb-2 ${isopen2 ? "px-4" : "sr-only"}`}>EXPLORE</h3>
-          <SidebarItem icon={<Flame />} text="Trending" isOpen={isopen2} />
-          <SidebarItem icon={<Music />} text="Music" isOpen={isopen2} />
-          <SidebarItem icon={<Film />} text="Movies & TV" isOpen={isopen2} />
-          <SidebarItem icon={<Newspaper />} text="News" isOpen={isopen2} />
-          <SidebarItem icon={<Gamepad/>} text="Gaming" isOpen={isopen2} />
-          <SidebarItem icon={<Trophy />} text="Sports" isOpen={isopen2} />
-          <SidebarItem icon={<Lightbulb />} text="Learning" isOpen={isopen2} />
-        </div>
-
-        <hr className="border-t my-2" />
-        
-        {/* Footer */}
-        {isopen2 && (
-          <div className="text-xs text-muted-foreground pt-2 px-4 pb-4">
-            <div className="flex flex-wrap gap-x-2 mb-2">
-              <Link href="#\" className="hover:underline">About</Link>
-              <Link href="#" className="hover:underline">Press</Link>
-              <Link href="#" className="hover:underline">Copyright</Link>
-              <Link href="#" className="hover:underline">Contact</Link>
-              <Link href="#" className="hover:underline">Creators</Link>
-            </div>
-            <div className="flex flex-wrap gap-x-2 mb-2">
-              <Link href="#" className="hover:underline">Terms</Link>
-              <Link href="#" className="hover:underline">Privacy</Link>
-              <Link href="#" className="hover:underline">Policy & Safety</Link>
-            </div>
-            <p className="mt-4">© 2025 YouTube Clone</p>
-          </div>
-        )}
+      
       </div>
     </aside>
   )
@@ -124,13 +100,29 @@ export function SidebarHome({ isOpen }: SidebarProps) {
 
 
 
-function SidebarItem({ icon, text, isOpen, active = false }: { icon: React.ReactNode, text: string, isOpen: boolean, active?: boolean }) {
+function SidebarItem({
+  icon,
+  text,
+  isOpen,
+  active = false,
+  className = "",
+}: {
+  icon: React.ReactNode;
+  text: string;
+  isOpen: boolean;
+  active?: boolean;
+  className?: string;
+}) {
   return (
-    <Link href="#" className={`flex items-center py-2 px-3 rounded-lg ${active ? "bg-secondary" : "hover:bg-secondary"} transition-colors mb-1`}>
+    <div
+      className={`flex items-center py-2 px-3 rounded-lg ${
+        active ? "bg-secondary" : "hover:bg-secondary"
+      } transition-colors mb-1 ${className}`}
+    >
       <span className="text-lg">{icon}</span>
       {isOpen && <span className="ml-4">{text}</span>}
-    </Link>
-  )
+    </div>
+  );
 }
 
 function SubscriptionItem({ name, imageUrl }: { name: string, imageUrl: string }) {

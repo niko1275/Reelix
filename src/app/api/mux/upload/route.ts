@@ -9,7 +9,7 @@ const client = new Mux({
   tokenSecret: process.env['MUX_TOKEN_SECRET'],
 });
 
-export async function GET() {
+export async function PUT() {
   try {
     const user = auth();
     

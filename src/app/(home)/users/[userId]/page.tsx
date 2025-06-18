@@ -1,6 +1,6 @@
 import UserView from "@/components/users/user-view"
 import { HydrateClient, trpc } from "@/server/server"
-import { auth } from "@clerk/nextjs/server";
+
 
 interface UserPageProps {
     params: {

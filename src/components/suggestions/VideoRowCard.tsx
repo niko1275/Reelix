@@ -9,6 +9,7 @@ interface VideoRowCardProps {
         title: string;
         thumbnailUrl: string;
         createdAt: string;
+        muxUploadId: string;
         user: {
             name: string;
             imageUrl: string;
@@ -20,7 +21,7 @@ export function VideoRowCard({ video }: VideoRowCardProps) {
     return (
         <div className="w-full flex flex-row gap-x-3">
             <div className="w-2/4">
-                <Link href={`/videos/${video.id}`} className="">
+                <Link href={`/videos/${video.muxUploadId}`} className="">
                     <VideoThumbnail imageUrl={video.thumbnailUrl} className=""/>
                 </Link>
             </div>

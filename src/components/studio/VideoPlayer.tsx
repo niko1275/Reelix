@@ -11,6 +11,7 @@ interface VideoPlayerProps {
     thumnailurl?: string | null
     autoplay?: boolean
     onPlay?: () => void
+    onEnded?: () => void
 }
 
 export const VideoPlayerSkeleton = () => {
@@ -25,7 +26,8 @@ export const VideoPlayer = ({
     playbackId,
     thumnailurl,
     autoplay = false,
-    onPlay
+    onPlay,
+    onEnded
 }: VideoPlayerProps) => {
     const videoRef = useRef<HTMLVideoElement>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -43,7 +45,12 @@ export const VideoPlayer = ({
             }
         }
 
+        const handleEnded = () => {
+            onEnded?.()
+        }
+
         video.addEventListener('play', handlePlay)
+        video.addEventListener('ended', handleEnded)
 
         const videoUrl = `https://stream.mux.com/${playbackId}.m3u8`
 
@@ -51,6 +58,17 @@ export const VideoPlayer = ({
             const hls = new Hls({
                 enableWorker: true,
                 lowLatencyMode: true,
+                maxBufferLength: 30,
+                maxMaxBufferLength: 60,
+                maxBufferSize: 60 * 1000 * 1000, // 60MB
+                maxBufferHole: 0.5,
+                highBufferWatchdogPeriod: 2,
+                nudgeMaxRetry: 5,
+                nudgeOffset: 0.1,
+                startFragPrefetch: true,
+                testBandwidth: true,
+                progressive: true,
+                backBufferLength: 90
             })
 
             hls.loadSource(videoUrl)
@@ -68,14 +86,30 @@ export const VideoPlayer = ({
 
             hls.on(Hls.Events.ERROR, (_, data) => {
                 if (data.fatal) {
-                    setError("Error al cargar el video")
-                    setIsLoading(false)
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            // try to recover network error
+                            console.log('fatal network error encountered, trying to recover');
+                            hls.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.log('fatal media error encountered, trying to recover');
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            // cannot recover
+                            setError("Error al cargar el video")
+                            setIsLoading(false)
+                            hls.destroy();
+                            break;
+                    }
                 }
             })
 
             return () => {
                 hls.destroy()
                 video.removeEventListener('play', handlePlay)
+                video.removeEventListener('ended', handleEnded)
             }
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
             // Para Safari
@@ -92,7 +126,7 @@ export const VideoPlayer = ({
             setError("Tu navegador no soporta la reproducción de video")
             setIsLoading(false)
         }
-    }, [playbackId, autoplay, onPlay, hasPlayed])
+    }, [playbackId, autoplay, onPlay, onEnded, hasPlayed])
 
     if (error) {
         return (

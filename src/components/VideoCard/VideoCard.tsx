@@ -1,13 +1,16 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+"use client";
+
+import Image from "next/image";
+import { useCallback, useState } from "react";
+import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { MoreVertical, MoreVerticalIcon, Plus } from "lucide-react";
-import Link from "next/link";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "../ui/dropdown-menu";
 import { trpc } from "@/utils/trpc";
-import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { MoreVertical, Plus } from "lucide-react";
+import Link from "next/link";
+
 import {
   Dialog,
   DialogContent,
@@ -17,190 +20,193 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { Switch } from "../ui/switch";
+import { Button } from "../ui/button";
 
-interface VideoCardProps {
-    video: {
-        id: number;
-        title: string;
-        thumbnailUrl: string;
-        createdAt: string;
-        muxUploadId: string;
-        user: {
-            name: string;
-            imageUrl: string;
-            clerkId: string;
-            subscribersCount: number;
-            isSubscribed: boolean;
-        } | null;
-        stats: {
-            views: number;
-            likes: number;
-            dislikes: number;
-            userReaction: string | null;
-        };
-    };
+export interface VideoWithUserAndStats {
+  id: number;
+  title: string;
+  description: string;
+  videoUrl: string;
+  thumbnailUrl: string;
+  duration: number;
+  views: number;
+  isPublished: boolean;
+  userId: string;
+  muxAssetId: string;
+  muxStatus: string;
+  muxUploadId: string;
+  categoryId: number;
+  createdAt: string; // o Date si ya lo parseas
+  updatedAt: string; // o Date
+  playbackId: string;
+  visibility: 'public' | 'private' | 'unlisted';
+
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    clerkId: string;
+    imageUrl: string;
+    createdAt: string;
+    updatedAt: string;
+    bannerUrl: string;
+    bannerKey: string;
+    subscribersCount: number;
+    isSubscribed: boolean;
+  };
+
+  stats: {
+    views: number;
+    likes: number;
+    dislikes: number;
+    userReaction: 'like' | 'dislike' | null;
+  };
 }
+export function VideoCard({video}: {video: VideoWithUserAndStats}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
 
-export const VideoCard = ({ video }: VideoCardProps) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
-    const [newPlaylistName, setNewPlaylistName] = useState("");
-    const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
-    const [isPublic, setIsPublic] = useState(true);
+  const utils = trpc.useUtils();
+  const { data: playlists } = trpc.playlist.getUserPlaylists.useQuery();
+  console.log("🧪 playlists:", JSON.stringify(playlists, null, 2))
+  const resetCreatePlaylistForm = useCallback(() => {
+      setNewPlaylistName("");
+      setNewPlaylistDescription("");
+      setIsPublic(true);
+  }, []);
 
-    const utils = trpc.useUtils();
-    const { data: playlists } = trpc.playlist.getUserPlaylists.useQuery();
+  const createPlaylist = trpc.playlist.createPlaylist.useMutation({
+      onSuccess: () => {
+          toast.success("Playlist creada exitosamente");
+          utils.playlist.getUserPlaylists.invalidate();
+          setIsCreatePlaylistOpen(false);
+          resetCreatePlaylistForm();
+      },
+      onError: (error) => {
+          toast.error(error.message);
+      }
+  });
 
-    const resetCreatePlaylistForm = useCallback(() => {
-        setNewPlaylistName("");
-        setNewPlaylistDescription("");
-        setIsPublic(true);
-    }, []);
+  const addToPlaylist = trpc.playlist.addVideo.useMutation({
+      onSuccess: () => {
+          toast.success("Video agregado a la playlist");
+          utils.playlist.getUserPlaylists.invalidate();
+          setIsOpen(false);
+      },
+      onError: (error) => {
+          toast.error(error.message);
+      }
+  });
 
-    const createPlaylist = trpc.playlist.createPlaylist.useMutation({
-        onSuccess: () => {
-            toast.success("Playlist creada exitosamente");
-            utils.playlist.getUserPlaylists.invalidate();
-            setIsCreatePlaylistOpen(false);
-            resetCreatePlaylistForm();
-        },
-        onError: (error) => {
-            toast.error(error.message);
-        }
-    });
+  const handleCreatePlaylist = () => {
+      if (!newPlaylistName.trim()) {
+          toast.error("El nombre de la playlist es requerido");
+          return;
+      }
 
-    const addToPlaylist = trpc.playlist.addVideo.useMutation({
-        onSuccess: () => {
-            toast.success("Video agregado a la playlist");
-            utils.playlist.getUserPlaylists.invalidate();
-            setIsOpen(false);
-        },
-        onError: (error) => {
-            toast.error(error.message);
-        }
-    });
+      createPlaylist.mutate({
+          name: newPlaylistName,
+          description: newPlaylistDescription,
+          isPublic,
+      });
+  };
 
-    const handleCreatePlaylist = () => {
-        if (!newPlaylistName.trim()) {
-            toast.error("El nombre de la playlist es requerido");
-            return;
-        }
+  const handleAddToPlaylist = (playlistId: number) => {
+      addToPlaylist.mutate({
+          playlistId,
+          videoId: video.id
+      });
+  };
 
-        createPlaylist.mutate({
-            name: newPlaylistName,
-            description: newPlaylistDescription,
-            isPublic,
-        });
-    };
+  const handleCreatePlaylistClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsCreatePlaylistOpen(true);
+      setIsOpen(false);
+  };
 
-    const handleAddToPlaylist = (playlistId: number) => {
-        addToPlaylist.mutate({
-            playlistId,
-            videoId: video.id
-        });
-    };
-
-    const handleCreatePlaylistClick = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsCreatePlaylistOpen(true);
-        setIsOpen(false);
-    };
-
-    const handleCloseCreatePlaylist = () => {
-        setIsCreatePlaylistOpen(false);
-        resetCreatePlaylistForm();
-    };
-
-    return (
-        <>
-         <Card className="h-full flex flex-col">
-    <CardContent className="p-0">
-        <Link href={`/videos/${video.muxUploadId}`} className="relative aspect-video block">
-            <img
-                src={video.thumbnailUrl}
-                alt={video.title}
-                className="object-cover w-full h-full rounded-t-lg"
+  const handleCloseCreatePlaylist = () => {
+      setIsCreatePlaylistOpen(false);
+      resetCreatePlaylistForm();
+  };
+  
+  return (
+    <div className="group cursor-pointer relative">
+      {/* Todo el contenido clickeable está dentro del Link */}
+      <Link href={`/videos/${video.muxUploadId}`}>
+        <div>
+          {/* Imagen del video */}
+          <div className="relative aspect-video overflow-hidden rounded-lg">
+            <Image
+              src={video.thumbnailUrl}
+              alt={video.title}
+              fill
+              className={cn(
+                "object-cover transition-transform duration-300",
+                isHovered ? "scale-105" : "scale-100"
+              )}
             />
-        </Link>
-    </CardContent>
-    <CardFooter className="p-4 flex gap-3 items-start">
-        <Avatar>
-            <AvatarImage src={video.user?.imageUrl} />
-            <AvatarFallback>{video.user?.name?.charAt(0)}</AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col gap-1 flex-1">
-            <Link href={`/videos/${video.muxUploadId}`}>
-                <h3 className="font-semibold line-clamp-2 hover:underline">
-                    {video.title}
-                </h3>
-            </Link>
-            <p className="text-sm text-muted-foreground">
-                {video.user?.name}
-            </p>
-            <div className="flex gap-2 text-sm text-muted-foreground">
-                <span>{video.stats.views} views</span>
-                <span>•</span>
-                <span>
-                    {formatDistanceToNow(new Date(video.createdAt), {
-                        addSuffix: true,
-                        locale: es,
-                    })}
-                </span>
+            <div className="absolute bottom-1 right-1 bg-black/80 px-1 py-0.5 text-xs text-white rounded">
+              {video.duration} Segundos
             </div>
-        </div>
-        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger asChild>
-                <button 
-                    className="p-1 hover:bg-gray-100 rounded"
-                    onClick={(e) => {
-                        e.stopPropagation(); // importante
-                        e.preventDefault(); // previene navegación en caso de estar dentro de Link
+          </div>
+  
+          {/* Título y stats */}
+          <div className="mt-2 space-y-1">
+            {/* Título + botón de opciones al lado */}
+            <div className="flex items-start justify-between">
+              <h3 className="font-medium line-clamp-2 text-sm">{video.title}</h3>
+  
+              {/* Botón fuera del Link pero dentro del layout visual */}
+              <div onClick={(e) => e.preventDefault()}>
+                <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="p-1 hover:bg-gray-100 rounded"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault(); // Evita navegación al presionar
                         setIsOpen(true);
-                    }}
-                >
-                    <MoreVertical className="w-5 h-5" />
-                </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-40">
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                        Agregar a playlist
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
+                      }}
+                    >
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-40">
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>Agregar a playlist</DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
                         {playlists?.map((playlist) => (
-                            <DropdownMenuItem 
-                                key={playlist.id}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleAddToPlaylist(playlist.id);
-                                }}
-                            >
-                                {playlist.name}
-                            </DropdownMenuItem>
+                          <DropdownMenuItem
+                            key={playlist.id}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleAddToPlaylist(playlist.id);
+                            }}
+                          >
+                            {playlist.name}
+                          </DropdownMenuItem>
                         ))}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            onClick={handleCreatePlaylistClick}
-                        >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Crear nueva playlist
+                        <DropdownMenuItem onClick={handleCreatePlaylistClick}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Crear nueva playlist
                         </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                </DropdownMenuSub>
-              
-              
-            </DropdownMenuContent>
-        </DropdownMenu>
-    </CardFooter>
-</Card>
-            <Dialog open={isCreatePlaylistOpen} onOpenChange={handleCloseCreatePlaylist}>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Dialog open={isCreatePlaylistOpen} onOpenChange={handleCloseCreatePlaylist}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Crear nueva playlist</DialogTitle>
@@ -252,6 +258,22 @@ export const VideoCard = ({ video }: VideoCardProps) => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </>
-    );
-}; 
+              </div>
+            </div>
+  
+            {/* Stats */}
+            <div className="flex text-xs text-muted-foreground">
+              <span>{video.stats.views} views</span>
+              <span className="mx-1">•</span>
+              <span>
+                {formatDistanceToNow(new Date(video.createdAt), {
+                  addSuffix: true,
+                  locale: es,
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </div>
+  )}

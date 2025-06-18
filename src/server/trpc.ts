@@ -1,5 +1,5 @@
 import { initTRPC, TRPCError } from '@trpc/server';
-import { getAuth } from '@clerk/nextjs/server';
+import { ClerkMiddlewareAuthObject, getAuth } from '@clerk/nextjs/server';
 import db from '@/lib/db/db';
 import { auth } from '@clerk/nextjs/server'
 import { cache } from 'react';
@@ -18,7 +18,7 @@ export interface Context {
 export const createTRPCContext = cache(async () => {
   const { userId } = await auth();
   return {
-    auth: { userId },
+    auth: { userId } as ClerkMiddlewareAuthObject | null,
     db,
   }
 });

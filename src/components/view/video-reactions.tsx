@@ -11,10 +11,10 @@ interface VideoTopRowProps {
 
 export const VideoReactions = ({ video }: VideoTopRowProps) => {
   const utils = trpc.useUtils();
-  const [optimisticReaction, setOptimisticReaction] = useState<string | null>(video.stats.userReaction);
+  const [optimisticReaction, setOptimisticReaction] = useState<string | null>(video.stats?.userReaction ?? null);
   const [optimisticStats, setOptimisticStats] = useState({
-    likes: video.stats.likes || 0,
-    dislikes: video.stats.dislikes || 0
+    likes: video.stats?.likes ?? 0,
+    dislikes: video.stats?.dislikes ?? 0
   });
 
   const { mutate: toggleReaction, isPending } = trpc.videoReactions.toggleReaction.useMutation({

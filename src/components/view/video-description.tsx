@@ -22,7 +22,7 @@ export default function VideoDescription({ description, compactView, compactdate
                     {expanded ? expandedView : compactView} views
                 </span>
                 <span className="font-medium">
-                    {expanded ? expandeddate : compactdate}
+                    { compactdate}
                 </span>
             </div>
             <div className="relative w-full">

@@ -81,16 +81,8 @@ export function ChannelInfo({
           Subscribe
         </Button>
       )}
-        
+           
        
-        
-        <Button variant="outline" size="icon">
-          <ThumbsUp className="h-4 w-4" />
-        </Button>
-        
-        <Button variant="outline" size="icon">
-          <ShareIcon className="h-4 w-4" />
-        </Button>
       </div>
     </div>
   );

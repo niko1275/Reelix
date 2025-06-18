@@ -23,13 +23,15 @@ export default function UserView({clerkId}: UserViewQueryProps) {
 
 const  UserViewQuery =({clerkId}: UserViewQueryProps)=> {
     const data = trpc.user.getOneUser.useSuspenseQuery({clerkId})
-    console.log("gETOoNE",data[0])
+    const tabs = [{name: "Videos", isActive: true}]
+ 
 return(
     <div className="min-h-screen flex flex-col">
-      <YouTubeHeader />
+     
       
       <main className="flex-1">
         <ChannelBanner bannerUrl="https://images.pexels.com/photos/2387418/pexels-photo-2387418.jpeg" />
+       
        
         <div className="max-w-screen-2xl mx-auto">
           <ChannelInfo
@@ -42,7 +44,7 @@ return(
             totalViews="0"
           />
           
-         
+          <ChannelNavigation tabs={[{name: "Videos", isActive: true}]} />
           <VideoGrid videos={data[0].videosUser} />
         </div>
       </main>

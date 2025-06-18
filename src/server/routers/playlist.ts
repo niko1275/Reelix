@@ -1,22 +1,24 @@
-import { router, protectedProcedure } from "../trpc";
+import { router, protectedProcedure, baseProcedure } from "../trpc";
 import { z } from "zod";
-import { eq, and, desc, asc, getTableColumns } from "drizzle-orm";
-import { playlists, playlistVideos, users, videos } from "@/lib/db/schema";
+import { eq, and, desc, asc, getTableColumns, sql } from "drizzle-orm";
+import { playlists, playlistVideos, users, videos, subscriptions, videoReactions } from "@/lib/db/schema";
 import type { InferModel } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+
 
 type Playlist = InferModel<typeof playlists>;
 type PlaylistVideo = InferModel<typeof playlistVideos>;
 
 export const playlistRouter = router({
 
-  getUserPlaylistsWithFirstVideo: protectedProcedure.query(async ({ ctx }) => {
+  getUserPlaylistsWithFirstVideo: baseProcedure.query(async ({ ctx }) => {
     const userId = ctx.auth?.userId;
     if (!userId) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
         message: "Usuario no autenticado",
       });
+      
     }
   
 
@@ -64,39 +66,137 @@ export const playlistRouter = router({
   // Get a specific playlist with its videos
   getPlaylist: protectedProcedure
     .input(z.object({
-      playlistId: z.number(),
+      id: z.string(),
     }))
     .query(async ({ ctx, input }) => {
-      if (!ctx.auth?.userId) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Usuario no autenticado",
-        });
-      }
-
-      const playlist = await ctx.db.query.playlists.findFirst({
-        where: and(
-          eq(playlists.id, input.playlistId),
-          eq(playlists.userId, ctx.auth.userId)
-        ),
-        with: {
-          videos: {
-            with: {
-              video: true,
+      const { id } = input;
+      const userId = ctx.auth?.userId;
+      console.log("▶️ getPlaylist - INPUT:", userId);
+      try {
+        const [playlist] = await ctx.db
+          .select({
+            ...getTableColumns(playlists),
+            user: {
+              ...getTableColumns(users),
+              subscribersCount: sql<number>`(
+                SELECT COUNT(*)::int
+                FROM ${subscriptions}
+                WHERE ${subscriptions.subscribedToId} = ${users.clerkId}
+              )`,
+              isSubscribed: userId ? sql<boolean>`EXISTS (
+                SELECT 1
+                FROM ${subscriptions}
+                WHERE ${subscriptions.subscriberId} = ${userId}
+                AND ${subscriptions.subscribedToId} = ${users.clerkId}
+              )` : sql<boolean>`false`,
             },
-            orderBy: [asc(playlistVideos.position)],
-          },
-        },
-      });
+          })
+          .from(playlists)
+          .leftJoin(users, eq(users.clerkId, playlists.userId))
+          .where(
+            and(
+              eq(playlists.id, parseInt(id)),
+              eq(users.clerkId, userId || "")
+            )
+            );
 
-      if (!playlist) {
+        if (!playlist) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Playlist no encontrada",
+          });
+        }
+
+        if (!playlist.isPublic && playlist.userId !== userId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para ver esta playlist",
+          });
+        }
+
+        // Obtener los videos de la playlist con sus estadísticas
+        const playlistVideosResult = await ctx.db.query.playlistVideos.findMany({
+          where: eq(playlistVideos.playlistId, parseInt(id)),
+          with: {
+            video: {
+              with: {
+                user: true,
+              },
+            },
+          },
+          orderBy: [asc(playlistVideos.position)],
+        });
+
+        // Obtener las estadísticas de cada video
+        const videosWithStats = await Promise.all(
+          playlistVideosResult.map(async (pv) => {
+            const [stats] = await ctx.db
+              .select({
+                likes: sql<number>`(
+                  SELECT COUNT(*)::int
+                  FROM ${videoReactions}
+                  WHERE ${videoReactions.videoId} = ${pv.video.id}
+                  AND ${videoReactions.type} = 'like'
+                )`,
+                dislikes: sql<number>`(
+                  SELECT COUNT(*)::int
+                  FROM ${videoReactions}
+                  WHERE ${videoReactions.videoId} = ${pv.video.id}
+                  AND ${videoReactions.type} = 'dislike'
+                )`,
+                userReaction: userId ? sql<'like' | 'dislike' | null>`(
+                  SELECT type
+                  FROM ${videoReactions}
+                  WHERE ${videoReactions.videoId} = ${pv.video.id}
+                  AND ${videoReactions.userId} = ${userId}
+                )` : sql<null>`null`,
+              })
+              .from(videoReactions)
+              .where(eq(videoReactions.videoId, pv.video.id));
+
+            // Get user subscription data
+            const [userData] = await ctx.db
+              .select({
+                subscribersCount: sql<number>`(
+                  SELECT COUNT(*)::int
+                  FROM ${subscriptions}
+                  WHERE ${subscriptions.subscribedToId} = ${pv.video.user.clerkId}
+                )`,
+                isSubscribed: userId ? sql<boolean>`EXISTS (
+                  SELECT 1
+                  FROM ${subscriptions}
+                  WHERE ${subscriptions.subscriberId} = ${userId}
+                  AND ${subscriptions.subscribedToId} = ${pv.video.user.clerkId}
+                )` : sql<boolean>`false`,
+              })
+              .from(subscriptions)
+              .where(eq(subscriptions.subscribedToId, pv.video.user.clerkId));
+
+            return {
+              ...pv,
+              video: {
+                ...pv.video,
+                stats,
+                user: {
+                  ...pv.video.user,
+                  ...userData,
+                },
+              },
+            };
+          })
+        );
+        
+        return {
+          ...playlist,
+          videos: videosWithStats,
+        };
+      } catch (error) {
+        console.error("Error al obtener la playlist:", error);
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Playlist no encontrada",
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error al obtener la playlist",
         });
       }
-
-      return playlist;
     }),
 
   // Create a new playlist

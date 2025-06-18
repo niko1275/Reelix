@@ -8,13 +8,15 @@ import { SidebarTrigger } from "./ui/sidebar"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
 
+
 export function Navbar() {
   const { isSignedIn } = useUser()
   const { isLoaded } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [searchValue, setSearchValue] = useState(searchParams.get("search") || "")
-
+  const { user } = useUser()
+  const userId = user?.id
   const handleSearch = () => {
     const params = new URLSearchParams(searchParams.toString())
     if (searchValue) {
@@ -83,8 +85,17 @@ export function Navbar() {
                     <VideoIcon className="h-4 w-4" />
                   }
                 />
+                  <UserButton.Link
+                  href={`/users/${userId}`}
+                  label="Ver tu canal"
+                  labelIcon={
+                    <VideoIcon className="h-4 w-4" />
+                  }
+                />
               </UserButton.MenuItems>
             </UserButton>
+
+            
           )}
         </div>
       </div>

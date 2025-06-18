@@ -1,43 +1,79 @@
-import React from 'react';
-import { Play } from 'lucide-react';
-import { playlistGetUserPlaylistsAndVideosPlaylistsOutput } from '@/modules/videos/types';
-import PlaylistInfo from './PlaylistThumbnail';
-import VideoThumbnail from '../studio/VideoThumnail';
-import { cn } from '@/lib/utils';
+"use client";
 
-type PlaylistItem = playlistGetUserPlaylistsAndVideosPlaylistsOutput[number];
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
+import { Image } from "../ui/image";
+import { Skeleton } from "../ui/skeleton";
+
+import { playlists } from "@/lib/db/schema";
+import type { InferModel } from "drizzle-orm";
+
+type Playlist = InferModel<typeof playlists>;
 
 interface PlaylistCardProps {
-  playlist: PlaylistItem;
+    playlist: Playlist & {
+        user: {
+            username: string
+        }
+        videos: {
+            video: {
+                id: number
+                title: string
+                thumbnailUrl: string | null
+            }
+        }[]
+    }
 }
 
-const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist }) => {
-  return (
-    <div className="group w-full transition-all duration-300 hover:transform hover:translate-y-[-2px]">
-      <div className="bg-white dark:bg-zinc-900 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-        <div className="relative aspect-video">
-          <VideoThumbnail
-            imageUrl={playlist.firstVideo?.thumbnailUrl ?? ""}
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
-            <button className="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transform scale-90 group-hover:scale-100 transition-all duration-300 flex items-center gap-1">
-              <Play size={16} fill="white" />
-              <span className="text-sm font-medium">Play All</span>
-            </button>
-          </div>
-        </div>
+export const PlaylistCard = ({
+    playlist
+}: PlaylistCardProps) => {
+    const router = useRouter()
 
-        <div className="p-2">
-          <h3 className="font-medium text-sm line-clamp-1">
-            {playlist.name}
-          </h3>
-          <p className="text-xs text-muted-foreground line-clamp-1">
-            {playlist.user.name} • {playlist.firstVideo ? "1 video" : "Sin videos"}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
+    const handleClick = () => {
+        router.push(`/playlists/${playlist.id}`)
+    }
 
-export default PlaylistCard;
+    return (
+        <Card 
+            className="h-full flex flex-col cursor-pointer hover:opacity-75 transition"
+            onClick={handleClick}
+        >
+            <CardHeader className="flex-none p-0">
+                <div className="aspect-video relative">
+                    {playlist.videos[0]?.video.thumbnailUrl ? (
+                        <Image
+                            src={playlist.videos[0].video.thumbnailUrl}
+                            alt={playlist.videos[0].video.title}
+                            fill
+                            className="object-cover rounded-t-lg"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-gray-200 rounded-t-lg" />
+                    )}
+                </div>
+            </CardHeader>
+            <CardContent className="flex-grow p-4">
+                <h3 className="font-semibold line-clamp-2">
+                    {playlist.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                    {playlist.user.username}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    {playlist.videos.length} videos
+                </p>
+            </CardContent>
+            <CardFooter className="p-4 pt-0">
+                <p className="text-sm text-muted-foreground">
+                    {formatDistanceToNow(playlist.createdAt, {
+                        addSuffix: true,
+                        locale: es
+                    })}
+                </p>
+            </CardFooter>
+        </Card>
+    )
+}

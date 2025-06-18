@@ -91,7 +91,7 @@ export const videoRouter = router({
     }))
     .query(async ({ ctx, input }) => {
       const { cursor, limit } = input;
-      const userId = ctx.userId;
+      const userId = ctx.auth?.userId;
 
       if (!userId) {
         return {
@@ -147,7 +147,7 @@ export const videoRouter = router({
     create: protectedProcedure.mutation(async({ctx})=>{  
       try {
         console.log("🚀 Iniciando creación de video...");
-        const userId = ctx.userId;
+        const userId = ctx.auth?.userId;
 
         if(!userId){
           console.error("❌ No hay userId en el contexto");
@@ -247,7 +247,7 @@ export const videoRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         const { id, ...data } = input;
-        const userId = ctx.userId;
+        const userId = ctx.auth?.userId;
 
         if (!userId) {
           throw new TRPCError({
@@ -301,6 +301,13 @@ export const videoRouter = router({
         const { id } = input;
         const userId = ctx.auth?.userId;
 
+        if (!userId) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "No autorizado",
+          });
+        }
+
         try {
           const [video] = await db
             .select({
@@ -320,11 +327,6 @@ export const videoRouter = router({
                 )` : sql<boolean>`false`,
               },
               stats: {
-                views: sql<number>`(
-                  SELECT COUNT(*)::int
-                  FROM ${videoViews}
-                  WHERE ${videoViews.videoId} = ${videos.id}
-                )`,
                 likes: sql<number>`(
                   SELECT COUNT(*)::int
                   FROM ${videoReactions}
@@ -337,24 +339,16 @@ export const videoRouter = router({
                   WHERE ${videoReactions.videoId} = ${videos.id}
                   AND ${videoReactions.type} = 'dislike'
                 )`,
-                userReaction: userId ? sql<string>`(
+                userReaction: userId ? sql<'like' | 'dislike' | null>`(
                   SELECT type
                   FROM ${videoReactions}
                   WHERE ${videoReactions.videoId} = ${videos.id}
                   AND ${videoReactions.userId} = ${userId}
-                  LIMIT 1
-                )` : sql<string>`null`,
-                hasViewed: userId ? sql<boolean>`EXISTS (
-                  SELECT 1
-                  FROM ${videoViews}
-                  WHERE ${videoViews.videoId} = ${videos.id}
-                  AND ${videoViews.userId} = ${userId}
-                )` : sql<boolean>`false`,
-              },
-              
+                )` : sql<null>`null`,
+              }
             })
             .from(videos)
-            .leftJoin(users, eq(videos.userId, users.clerkId))
+            .leftJoin(users, eq(users.clerkId, videos.userId))
             .where(eq(videos.muxUploadId, id));
 
           if (!video) {
@@ -364,20 +358,9 @@ export const videoRouter = router({
             });
           }
 
-          // Generar URL presignada para el thumbnail si existe
-          if (video.thumbnailUrl) {
-            const presignedUrl = await generatePresignedUrl(video.thumbnailUrl);
-            if (presignedUrl) {
-              video.thumbnailUrl = presignedUrl;
-            }
-          }
-       
-          return {
-            ...video,
-           
-          };
+          return video;
         } catch (error) {
-          console.error("Error en getone:", error);
+          console.error("Error al obtener el video:", error);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Error al obtener el video",
@@ -419,7 +402,7 @@ export const videoRouter = router({
     
         const hasMore = suggestions.length > limit;
         const items = hasMore ? suggestions.slice(0, -1) : suggestions;
-        console.log("🧪 items:", items);
+      
         
         return {
           items,
@@ -461,7 +444,7 @@ export const videoRouter = router({
     
         const hasMore = suggestions.length > limit;
         const items = hasMore ? suggestions.slice(0, -1) : suggestions;
-        console.log("🧪 items:", items);
+       
         
         return {
           items,
@@ -479,7 +462,7 @@ export const videoRouter = router({
       .query(async ({ input, ctx }) => {
         const { limit, cursor, search, category } = input;
         const userId = ctx.auth?.userId;
-
+        console.log("🚀 ~ getHomeVideos ~ userId:", userId)
         try {
           const result = await db
             .select({
@@ -544,6 +527,8 @@ export const videoRouter = router({
           const hasMore = result.length > limit;
           const items = hasMore ? result.slice(0, -1) : result;
 
+      
+
           return {
             items: items,
             nextCursor: hasMore ? items[items.length - 1].createdAt.toISOString() : null,
@@ -593,73 +578,61 @@ export const videoRouter = router({
       }
     }),
 
-  addView: optionalAuthProcedure
-    .input(z.object({
-      videoId: z.string(),
-    }))
+  addView: protectedProcedure
+    .input(z.object({ videoId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { videoId } = input;
       const userId = ctx.auth?.userId;
+      
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "No autorizado"
+        });
+      }
 
       try {
-        // Verificar si el video existe
-        const [video] = await db
-          .select()
-          .from(videos)
-          .where(eq(videos.muxUploadId, videoId));
+        // First check if the video exists
+        const video = await ctx.db.query.videos.findFirst({
+          where: eq(videos.muxUploadId, videoId),
+        });
 
         if (!video) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Video no encontrado",
+            message: "Video no encontrado"
           });
         }
 
-        // Si hay un usuario autenticado, registrar la vista con el userId
-        if (userId) {
-          // Verificar si el usuario ya vio el video en las últimas 24 horas
-          const [existingView] = await db
-            .select()
-            .from(videoViews)
-            .where(
-              and(
-                eq(videoViews.videoId, video.id),
-                eq(videoViews.userId, userId),
-                gt(videoViews.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000))
-              )
-            );
+        // Try to insert the view, ignoring if it already exists
+        await ctx.db
+          .insert(videoViews)
+          .values({
+            videoId: video.id,
+            userId: userId,
+          })
+          .onConflictDoNothing({
+            target: [videoViews.userId, videoViews.videoId],
+          });
 
-          if (!existingView) {
-            // Registrar nueva vista
-            await db.insert(videoViews).values({
-              videoId: video.id,
-              userId: userId,
-            });
-
-            // Incrementar el contador de vistas del video
-            await db
-              .update(videos)
-              .set({
-                views: sql`${videos.views} + 1`,
-              })
-              .where(eq(videos.id, video.id));
-          }
-        } else {
-          // Para usuarios no autenticados, solo incrementar el contador
-          await db
-            .update(videos)
-            .set({
-              views: sql`${videos.views} + 1`,
-            })
-            .where(eq(videos.id, video.id));
-        }
+        // Update the video's view count
+        await ctx.db
+          .update(videos)
+          .set({
+            views: sql`${videos.views} + 1`
+          })
+          .where(eq(videos.id, video.id));
 
         return { success: true };
       } catch (error) {
         console.error("Error en addView:", error);
+        if (error instanceof TRPCError) {
+          throw error;
+        }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Error al registrar la vista",
+          cause: error
         });
       }
     }),

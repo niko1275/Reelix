@@ -1,8 +1,9 @@
 'use client';
 
 import MuxUploader from '@mux/mux-uploader-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from "@/components/ui/button";
 
 interface ModalCargarMuxProps {
   isOpen: boolean;
@@ -12,50 +13,63 @@ interface ModalCargarMuxProps {
 export default function ModalCargarMux({ isOpen, onClose }: ModalCargarMuxProps) {
   const [uploadUrl, setUploadUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    if (isOpen) {
-      fetch('/api/mux/upload')
-        .then(res => res.json())
-        .then(data => {
-          if (data.url) {
-            setUploadUrl(data.url);
-          }
-        })
-        .catch(error => {
-          console.error('Error al obtener la URL de upload:', error);
-        });
+  const handleSelect = async (event: any) => {
+    const file = event.target.files?.[0];
+    console.log("file", file);
+    if (!file) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/mux/upload', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (data.url) {
+        setUploadUrl(data.url);
+      }
+    } catch (error) {
+      console.error('Error al obtener la URL de upload:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [isOpen]);
+  };
 
   const handleUploadSuccess = () => {
     setIsUploading(false);
+    setUploadUrl(null);
     onClose();
-    router.refresh(); // Refrescar la página para mostrar el nuevo video
+    router.refresh();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4 ">Cargar Video</h2>
-        {uploadUrl && (
-          <MuxUploader 
-            endpoint={uploadUrl}
-            onUploadStart={() => setIsUploading(true)}
-            onSuccess={handleUploadSuccess}
-          />
-        )}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-bold mb-4">Cargar Video</h2>
+        
+        <MuxUploader 
+          endpoint={'/api/mux/upload'}
+          onUploadStart={() => setIsUploading(true)}
+          onSuccess={handleUploadSuccess}
+     
+          type="bar"
+        />
+        
         <div className="flex justify-end space-x-2 mt-4">
-          <button 
+          <Button
+            variant="outline"
             onClick={onClose}
-            disabled={isUploading}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+            disabled={isUploading || isLoading}
           >
-            {isUploading ? 'Subiendo...' : 'Cancelar'}
-          </button>
+            {isUploading ? 'Subiendo...' : isLoading ? 'Cargando...' : 'Cancelar'}
+          </Button>
         </div>
       </div>
     </div>

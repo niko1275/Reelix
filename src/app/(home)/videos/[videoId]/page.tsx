@@ -1,18 +1,12 @@
 "use server"
-
-import { VideoView } from "@/components/view/video-view";
-import { HydrateClient, trpc } from "@/server/server"
-import { Suggestions } from "@/components/suggestions/Suggestions"
-import PlaylistSection from "@/components/playlist/PlaylistSection"
-import { VideoSidebar } from "@/components/video/VideoSidebar"
+import { HydrateClient, trpc } from "@/server/server";
+import { VideoContent } from "@/components/video/VideoContent";
 
 interface VideoPageProps {
     params: {
         videoId: string
     }
 }
-
-
 
 export default async function VideoPage({params}: VideoPageProps) {
     const {videoId} = params;
@@ -27,17 +21,8 @@ export default async function VideoPage({params}: VideoPageProps) {
     ]);
 
     return (
-        <div className="grid sm:grid-cols-4 gap-4 mx-auto h-full grid-cols-1">
-            <div className="col-span-3 mx-10 my-10">
-                <HydrateClient>
-                <VideoView videoId={videoId}/>
-                </HydrateClient>
-            </div>
-            <div className="col-span-1 my-10">
-            <HydrateClient>
-                <VideoSidebar videoId={videoId} />
-                </HydrateClient>
-            </div>
-        </div>
-    )
+        <HydrateClient>
+            <VideoContent videoId={videoId} />
+        </HydrateClient>
+    );
 }

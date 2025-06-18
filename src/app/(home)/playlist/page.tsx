@@ -1,9 +1,10 @@
-import { HydrateClient, trpc } from "@/server/server"
-import PlaylistSection from "@/components/playlist/PlaylistSection"
+import { HydrateClient } from "@/server/server";
+import { PlaylistContent } from "@/components/playlist/PlaylistContent";
+
 export default function PlaylistPage() {
-    void trpc.playlist.getUserPlaylistsWithFirstVideo.prefetch();
     return (
         <HydrateClient>
-            < PlaylistSection/>
+            <PlaylistContent />
         </HydrateClient>
-    )}
+    );
+}

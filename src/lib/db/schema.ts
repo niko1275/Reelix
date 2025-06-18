@@ -177,9 +177,23 @@ export const comments: PgTableWithColumns<any> = pgTable('comments', {
   videoId: integer('video_id').notNull().references(() => videos.id, { onDelete: 'cascade' }),
   userId: text('user_id').notNull().references(() => users.clerkId, { onDelete: 'cascade' }),
   parentId: integer('parent_id').references(() => comments.id, { onDelete: 'cascade' }),
+  replyingTo: text('replying_to'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// Tabla de reacciones a comentarios
+export const commentReactions = pgTable('comment_reactions', {
+  id: serial('id').primaryKey(),
+  commentId: integer('comment_id').notNull().references(() => comments.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.clerkId, { onDelete: 'cascade' }),
+  type: text('type', { enum: ['like', 'dislike'] }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (t) => ({
+  // Índice compuesto para evitar reacciones duplicadas del mismo usuario al mismo comentario
+  uniqueUserComment: uniqueIndex('unique_user_comment_reaction').on(t.userId, t.commentId),
+}));
 
 // Relaciones de comentarios
 export const commentsRelations = relations(comments, ({ one, many }) => ({
@@ -195,8 +209,32 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
     fields: [comments.parentId],
     references: [comments.id],
   }),
-  replies: many(comments, { relationName: 'replies' }),
+  replies: many(comments, {
+    relationName: 'parent',
+  }),
+  reactions: many(commentReactions),
 }));
+
+// Relaciones de commentReactions
+export const commentReactionsRelations = relations(commentReactions, ({ one }) => ({
+  comment: one(comments, {
+    fields: [commentReactions.commentId],
+    references: [comments.id],
+  }),
+  user: one(users, {
+    fields: [commentReactions.userId],
+    references: [users.clerkId],
+  }),
+}));
+
+// Tipos para las reacciones a comentarios
+export type CommentReaction = typeof commentReactions.$inferSelect;
+export type NewCommentReaction = typeof commentReactions.$inferInsert;
+
+// Schemas para validación de reacciones a comentarios
+export const commentReactionSelectSchema = createSelectSchema(commentReactions);
+export const commentReactionInsertSchema = createInsertSchema(commentReactions);
+export const commentReactionUpdateSchema = createUpdateSchema(commentReactions);
 
 // Tipos para los comentarios
 export type Comment = typeof comments.$inferSelect;
@@ -230,17 +268,37 @@ export const playlistVideos: PgTableWithColumns<any> = pgTable('playlist_videos'
   uniquePlaylistVideo: uniqueIndex('unique_playlist_video').on(t.playlistId, t.videoId),
 }));
 
-// Tabla de historial
+// Tabla de historial mejorada
 export const watchHistory = pgTable('watch_history', {
   id: serial('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.clerkId, { onDelete: 'cascade' }),
   videoId: integer('video_id').notNull().references(() => videos.id, { onDelete: 'cascade' }),
   watchedAt: timestamp('watched_at').defaultNow().notNull(),
   watchDuration: integer('watch_duration').default(0).notNull(), // duración en segundos
+  progress: integer('progress').default(0).notNull(), // progreso del video en segundos
+  completed: boolean('completed').default(false).notNull(), // si el video se completó
+  lastPosition: integer('last_position').default(0).notNull(), // última posición vista
 }, (t) => ({
   // Índice compuesto para mantener solo la última vista de cada video por usuario
   uniqueUserVideo: uniqueIndex('unique_user_video_history').on(t.userId, t.videoId),
 }));
+
+// Vista para el historial del usuario con información detallada
+export const userHistoryView = pgTable('user_history_view', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  videoId: integer('video_id').notNull(),
+  videoTitle: text('video_title').notNull(),
+  videoThumbnail: text('video_thumbnail').notNull(),
+  videoDuration: integer('video_duration').notNull(),
+  channelName: text('channel_name').notNull(),
+  channelAvatar: text('channel_avatar').notNull(),
+  watchedAt: timestamp('watched_at').notNull(),
+  watchDuration: integer('watch_duration').notNull(),
+  progress: integer('progress').notNull(),
+  completed: boolean('completed').notNull(),
+  lastPosition: integer('last_position').notNull(),
+});
 
 // Relaciones de playlists
 export const playlistsRelations = relations(playlists, ({ one, many }) => ({
@@ -287,6 +345,11 @@ export const playlistVideoUpdateSchema = createUpdateSchema(playlistVideos);
 export const watchHistorySelectSchema = createSelectSchema(watchHistory);
 export const watchHistoryInsertSchema = createInsertSchema(watchHistory);
 export const watchHistoryUpdateSchema = createUpdateSchema(watchHistory);
+
+// Tipos para el historial
+export type WatchHistory = typeof watchHistory.$inferSelect;
+export type NewWatchHistory = typeof watchHistory.$inferInsert;
+export type UserHistoryView = typeof userHistoryView.$inferSelect;
 
 
 

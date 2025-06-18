@@ -67,7 +67,7 @@ function SuggestionsContent({ id }: SuggestionsProps) {
         <div className="space-y-4">
             {data.pages.map((page) =>
                 page.items.map((video) => (
-                    <VideoRowCard key={video.id} video={video} />
+                    <VideoRowCard key={video.id} video={video as any} />
                 ))
             )}
             {hasNextPage && (
