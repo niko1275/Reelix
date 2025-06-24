@@ -293,7 +293,7 @@ export const videoRouter = router({
       }),
 
 
-      getone: baseProcedure
+      getone: publicProcedure
       .input(z.object({
         id: z.string(),
       }))
@@ -368,7 +368,7 @@ export const videoRouter = router({
         }
       }),
 
-      getVideoSuggestions: baseProcedure
+      getVideoSuggestions: publicProcedure
       .input(z.object({
         id: z.string(),
         limit: z.number().default(10),
