@@ -21,7 +21,7 @@ export default function ProtectedContent({
         {description}
       </p>
       <Button asChild>
-        <Link href="/api/auth/signin">
+        <Link href="/sign-in">
           {buttonText}
         </Link>
       </Button>

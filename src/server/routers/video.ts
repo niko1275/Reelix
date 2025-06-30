@@ -5,7 +5,7 @@ import { and, desc, eq, getTableColumns, lt, not, or, sql, gt } from 'drizzle-or
 import db from '@/lib/db/db';
 import { TRPCError } from '@trpc/server';
 import { mux } from '@/lib/mux/mux';
-import { get } from 'http';
+import { NextRequest, NextResponse } from "next/server";
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -303,10 +303,11 @@ export const videoRouter = router({
 
         if (!userId) {
           throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "No autorizado",
+            code: "UNAUTHORIZED", 
+            message: "User must be authenticated",
           });
         }
+    
 
         try {
           const [video] = await db

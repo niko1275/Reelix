@@ -19,6 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <ClerkProvider
+          afterSignOutUrl="/"
           signInUrl="/sign-in"
           signUpUrl="/sign-up"
          

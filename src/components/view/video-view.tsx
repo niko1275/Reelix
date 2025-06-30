@@ -36,11 +36,14 @@ export const VideoViewSkeleton = () => {
 type Video = InferSelectModel<typeof videos>
 
 function VideoViewContent({videoId}: VideoViewProps) {
+
+    const { userId } = useAuth()
+
     const [video] = trpc.video.getone.useSuspenseQuery({id: videoId}) as unknown as [Video & { isOwner: boolean }]
     const addView = trpc.video.addView.useMutation()
     const utils = trpc.useUtils()
-    const { userId } = useAuth()
-   
+  
+    
     const handleVideoStart = () => {
         addView.mutate(
             { videoId },

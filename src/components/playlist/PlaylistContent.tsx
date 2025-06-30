@@ -10,7 +10,7 @@ export function PlaylistContent() {
     if (error?.data?.code === 'UNAUTHORIZED') {
         return (
             <ProtectedContent 
-                title="Accede a tus Playlists"
+                title="Accede a tus Playlistss"
                 description="Inicia sesión para ver y gestionar tus playlists personalizadas"
                 buttonText="Iniciar Sesión"
             />

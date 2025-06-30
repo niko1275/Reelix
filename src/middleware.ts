@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+
 
 // This example protects all routes including api/trpc routes
 // Please edit this to allow other routes to be public as needed.
@@ -8,17 +8,19 @@ import { NextResponse } from "next/server";
 const isPublicRoute = createRouteMatcher([
   '/',
   '/explore',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
+  
 ]);
 
 
 
-export default clerkMiddleware((auth, req) => {  
+export default clerkMiddleware((auth, req) => {
+  // Solo protege si NO es una ruta pública
   if (!isPublicRoute(req)) {
-    auth.protect();
+    auth.protect(
+      
+    )
   }
-});
+})
 
 // Configuración específica para rutas de API
 export const config = {
