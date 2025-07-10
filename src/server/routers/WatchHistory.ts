@@ -1,15 +1,20 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "../trpc";
-import { watchHistory, userHistoryView, videos } from "@/lib/db/schema";
+import { optionalAuthProcedure, protectedProcedure, router } from "../trpc";
+import { watchHistory, videos } from "@/lib/db/schema";
 import { eq, and, inArray, desc } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 export const watchHistoryRouter = router({
-  getAll: protectedProcedure.query(async ({ ctx }) => {
+  getAll: optionalAuthProcedure.query(async ({ ctx }) => {
     const userId = ctx.auth?.userId;
+
     if (!userId) {
-      throw new Error("User ID is required");
+      throw new TRPCError({
+        code: "NOT_FOUND", // Cambiar a NOT_FOUND
+        message: "Resource not found",
+      });
     }
-    console.log("userId", userId)
+   
     try {
         const historyWithVideos = await ctx.db
         .select({

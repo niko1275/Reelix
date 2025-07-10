@@ -85,7 +85,9 @@ export const videoRouter = router({
     .input(z.object({
       cursor: z.object({
         id: z.number(),
-        createdAt: z.date(),
+        createdAt: z.union([z.string(), z.date()]).transform((val) => 
+          typeof val === 'string' ? new Date(val) : val
+        ),
       }).nullish(),
       limit: z.number().min(1).max(50).default(10),
     }))
@@ -152,7 +154,7 @@ export const videoRouter = router({
         if(!userId){
           console.error("❌ No hay userId en el contexto");
           throw new TRPCError({
-            code: "UNAUTHORIZED",
+            code: "NOT_FOUND",
           })
         }
 
@@ -248,14 +250,14 @@ export const videoRouter = router({
       .mutation(async ({ ctx, input }) => {
         const { id, ...data } = input;
         const userId = ctx.auth?.userId;
-
+       
         if (!userId) {
           throw new TRPCError({
-            code: "UNAUTHORIZED",
+            code: "NOT_FOUND",
             message: "No autorizado",
           });
         }
-
+       
         try {
           // Aseguramos que thumbnailUrl sea string o undefined, no null
           const updateData = {
@@ -293,20 +295,13 @@ export const videoRouter = router({
       }),
 
 
-      getone: publicProcedure
+      getone: optionalAuthProcedure
       .input(z.object({
         id: z.string(),
       }))
       .query(async ({ ctx, input }) => {
         const { id } = input;
-        const userId = ctx.auth?.userId;
-
-        if (!userId) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED", 
-            message: "User must be authenticated",
-          });
-        }
+        const userId = ctx.userId;
     
 
         try {
@@ -587,7 +582,7 @@ export const videoRouter = router({
       
       if (!userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "No autorizado"
         });
       }

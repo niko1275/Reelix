@@ -13,13 +13,6 @@ interface SuggestionsProps {
 export function Suggestions({ id }: SuggestionsProps) {
     const { isSignedIn } = useAuth();
 
-    if (!isSignedIn) {
-        return (
-            <div className="text-center text-muted-foreground py-4">
-                Inicia sesión para ver las sugerencias
-            </div>
-        )
-    }
 
     return (
         <Suspense fallback={<SuggestionsSkeleton />}>

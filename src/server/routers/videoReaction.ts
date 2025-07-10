@@ -1,7 +1,7 @@
-import { router, protectedProcedure } from "../trpc";
+import { router, protectedProcedure, optionalAuthProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
-import { videoReactions, videos } from "@/lib/db/schema";
+import { videoReactions, videos,users } from "@/lib/db/schema";
 import type { InferModel } from "drizzle-orm";
 
 type VideoReaction = InferModel<typeof videoReactions>;
@@ -103,17 +103,18 @@ export const videoReactionsRouter = router({
       }
     }),
 
-    getLikedVideos: protectedProcedure
+    getLikedVideos: optionalAuthProcedure
   .input(z.object({
     userId: z.string(),
   }))
   .query(async ({ ctx, input }) => {
-    console.log("▶️ getReactions - INPUT:", input);
+    
 
     const likedVideos = await ctx.db
       .select()
       .from(videoReactions)
       .innerJoin(videos, eq(videoReactions.videoId, videos.id))
+    
       .where(
         and(
           eq(videoReactions.userId, input.userId),

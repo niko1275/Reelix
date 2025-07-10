@@ -23,7 +23,7 @@ export default function UserView({clerkId}: UserViewQueryProps) {
 
 const  UserViewQuery =({clerkId}: UserViewQueryProps)=> {
     const data = trpc.user.getOneUser.useSuspenseQuery({clerkId})
-    const tabs = [{name: "Videos", isActive: true}]
+    
  
 return(
     <div className="min-h-screen flex flex-col">

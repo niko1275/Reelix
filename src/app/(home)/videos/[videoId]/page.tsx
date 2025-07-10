@@ -1,7 +1,6 @@
 "use server"
 import { HydrateClient, trpc } from "@/server/server";
 import { VideoContent } from "@/components/video/VideoContent";
-import { redirect } from "next/navigation";
 import { auth } from '@clerk/nextjs/server'
 interface VideoPageProps {
     params: {
@@ -10,7 +9,7 @@ interface VideoPageProps {
 }
 
 export default async function VideoPage({params}: VideoPageProps) {
-    const {videoId} = params;
+    const {videoId} = await params;
     const userid = auth.protect()
 
     await Promise.all([

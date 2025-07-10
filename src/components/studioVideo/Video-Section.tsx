@@ -1,8 +1,7 @@
 "use client"
 
 import { trpc } from "@/utils/trpc"
-import type { inferRouterOutputs } from "@trpc/server"
-import type { AppRouter } from "@/server/routers/_app"
+
 import { Button } from "@/components/ui/button"
 import { Loader2, Eye, Clock, Calendar, LockOpen, LockOpenIcon, LockIcon } from "lucide-react"
 import { 

@@ -11,6 +11,7 @@ import { type videos } from "@/lib/db/schema"
 import { type InferSelectModel } from "drizzle-orm"
 import { VideoViewTracker } from "@/components/video/VideoViewTracker"
 import { useAuth } from "@clerk/nextjs"
+import { notFound } from "next/navigation"
 
 interface VideoViewProps {
     videoId: string
@@ -37,23 +38,25 @@ type Video = InferSelectModel<typeof videos>
 
 function VideoViewContent({videoId}: VideoViewProps) {
 
-    const { userId } = useAuth()
+  
 
-    const [video] = trpc.video.getone.useSuspenseQuery({id: videoId}) as unknown as [Video & { isOwner: boolean }]
+    const { userId } = useAuth()
+    const [video] = trpc.video.getone.useSuspenseQuery({id: videoId})
     const addView = trpc.video.addView.useMutation()
     const utils = trpc.useUtils()
   
+    if(!video){
+        notFound()
+    }
     
     const handleVideoStart = () => {
-        addView.mutate(
-            { videoId },
-            {
-                onSuccess: () => {
-                    // Invalidar la consulta para actualizar el contador de vistas
-                    utils.video.getone.invalidate({ id: videoId })
-                }
-            }
-        )
+        // Solo registrar vista si el usuario está autenticado
+        if (userId) {
+            addView.mutate(
+                { videoId }
+                // No hagas nada en onSuccess, así no se recarga el video
+            )
+        }
     }
 
     return (

@@ -18,16 +18,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { toast } from "sonner"
 import { VideoPlayer } from "./VideoPlayer"
 import { ThumbnailUpload } from "./ThumbnailUpload"
-import { Data } from "@mux/mux-node/resources/index.mjs"
 
-type Video = InferModel<typeof videos>
 
 // Creamos un tipo para los campos que queremos actualizar
 type VideoFormData = {
     title?: string
     description?: string | null
     thumbnailUrl?: string | null
-    isPublished?: boolean
+    visibility?: string | null
     categoryId?: number | null
 }
 
@@ -35,7 +33,7 @@ const formSchema = z.object({
     title: z.string().optional(),
     description: z.string().nullable().optional(),
     thumbnailUrl: z.string().nullable().optional(),
-    isPublished: z.boolean().optional(),
+    visibility: z.string().nullable().optional(),
     categoryId: z.number().nullable().optional(),
 })
 
@@ -72,7 +70,7 @@ const FormSection = ({ videoId }: FormSectionProps) => {
             title: video.title,
             description: video.description,
             thumbnailUrl: video.thumbnailUrl,
-            isPublished: video.isPublished,
+            visibility: video.visibility,
             categoryId: video.categoryId,
         } : undefined
     });
@@ -83,7 +81,7 @@ const FormSection = ({ videoId }: FormSectionProps) => {
                 title: video.title,
                 description: video.description,
                 thumbnailUrl: video.thumbnailUrl,
-                isPublished: video.isPublished,
+                visibility: video.visibility,
                 categoryId: video.categoryId,
             });
         }
@@ -101,10 +99,14 @@ const FormSection = ({ videoId }: FormSectionProps) => {
 
     const onSubmit = (data: VideoFormData) => {
         if (!video?.id) return
-
+      
         updateVideo({
-            id: video.id,
-            ...data
+            id: Number(video.id),
+            title: data.title ?? video.title,
+            description: data.description ?? video.description,
+            thumbnailUrl: data.thumbnailUrl ?? video.thumbnailUrl,
+            visibility: data.visibility ?? video.visibility,
+            categoryId: typeof data.categoryId === "number" ? data.categoryId : video.categoryId,
         })
     }
 
@@ -112,7 +114,7 @@ const FormSection = ({ videoId }: FormSectionProps) => {
         if (!video?.id) return
 
         updateVideo({
-            id: video.id,
+            id: Number(video.id),
             thumbnailUrl: url
         })
     }
@@ -195,9 +197,8 @@ const FormSection = ({ videoId }: FormSectionProps) => {
                                         <FormLabel>Categoría</FormLabel>
                                         <Select 
                                             
-                                            onValueChange={(value) => field.onChange(Number(value))}
-                                            defaultValue={field.value?.toString()}
-                                            value={video.categoryId?.toString() ?? ""}
+                                            onValueChange={(value) => field.onChange(value === "" ? null : Number(value))}
+                                            value={field.value?.toString() ?? video.categoryId?.toString() ?? ""}
                                         >
                                             <FormControl>
                                                 <SelectTrigger>
@@ -277,12 +278,12 @@ const FormSection = ({ videoId }: FormSectionProps) => {
                                 </p>
                                 <FormField
                                     control={form.control}
-                                    name="isPublished"
+                                    name="visibility"
                                     render={({ field }) => (
                                         <FormItem>
                                             <Select
-                                                onValueChange={(value) => field.onChange(value === "public")}
-                                                defaultValue={field.value ? "public" : "private"}
+                                                onValueChange={field.onChange}
+                                                value={field.value ?? video.visibility ?? ""}
                                             >
                                                 <FormControl>
                                                     <SelectTrigger>

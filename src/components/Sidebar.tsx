@@ -4,10 +4,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-import { useAuth, useUser } from "@clerk/nextjs"
+import { useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import { Home, SquarePlay, Video, History, ThumbsUp,ListVideo, Compass, PlaySquare, Clock, Flame, Music, Film, Newspaper, Trophy, Lightbulb, Gamepad} from "lucide-react"
 import SidebarHomeMobile from "./SidebarHomeMobile"
+
 
 
 interface SidebarProps {
@@ -20,6 +21,8 @@ export function SidebarHome({ isOpen }: SidebarProps) {
   const { user } = useUser()
   const { state , isMobile} = useSidebar()
   const isopen2 = state === "expanded"  ? true : false
+
+  
 
   const userId = user?.id
   const links = [
@@ -70,9 +73,7 @@ export function SidebarHome({ isOpen }: SidebarProps) {
             <SidebarItem icon={<Clock />} text="History" isOpen={isopen2} />
           </Link>
          
-          <Link href="/studio">
-           <SidebarItem icon={<PlaySquare />} text="Tus Videos" isOpen={isopen2} />
-          </Link>
+         
           <Link href="/likedvideos">
           <SidebarItem icon={<ThumbsUp />} text="Videos que me gustaron" isOpen={isopen2} />
           </Link>

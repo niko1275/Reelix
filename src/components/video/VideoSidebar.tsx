@@ -15,15 +15,7 @@ export function VideoSidebar({ videoId }: VideoSidebarProps) {
     const [isPlaylistExpanded, setIsPlaylistExpanded] = useState(true);
     const { isSignedIn } = useAuth();
 
-    if (!isSignedIn) {
-        return (
-            <div className="space-y-6">
-                <div className="text-center text-muted-foreground py-4">
-                    Inicia sesión para ver tus playlists y sugerencias
-                </div>
-            </div>
-        )
-    }
+ 
 
     return (
         <div className="space-y-6">

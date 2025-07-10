@@ -20,12 +20,15 @@ export async function PUT() {
       );
     }
 
-    const directUpload = await client.video.uploads.create({
-      cors_origin: '*',
-      new_asset_settings: {
-        playback_policy: ['public'],
-      },
-    });
+   
+      const directUpload = await client.video.uploads.create({
+        cors_origin: '*',
+        new_asset_settings: {
+          playback_policy: ['public'],
+        },
+      });
+
+    console.log('🎬 Upload creado con ID:', directUpload.id);
 
     // Crear el registro del video en la base de datos
     const [video] = await db.insert(videos).values({
@@ -44,10 +47,13 @@ export async function PUT() {
       visibility: "private",
     }).returning();
 
+    console.log('📝 Video guardado en DB con muxUploadId:', directUpload.id);
+
     return NextResponse.json({ 
       url: directUpload.url,
       uploadId: directUpload.id,
-      videoId: video.id
+      videoId: video.id,
+      id: directUpload.id // Agregar también como 'id' para compatibilidad
     });
   } catch (error) {
     console.error('Error creating Mux upload:', error);
@@ -57,3 +63,53 @@ export async function PUT() {
     );
   }
 } 
+
+
+export async function POST(request: Request) {
+  try {
+    const { uploadId } = await request.json();
+    
+    // Crear asset desde el upload
+    const asset = await client.video.assets.create({
+      inputs: [{ url: `mux://uploads/${uploadId}` }],
+      playback_policy: ['public'],
+      encoding_tier: 'baseline', // o 'smart' para mejor calidad
+    } as any);
+    
+    console.log('👉 Asset creado:', asset.id);
+    
+    return NextResponse.json({ 
+      assetId: asset.id,
+      status: asset.status 
+    });
+  } catch (error) {
+    console.error('Error creating asset:', error);
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
+}
+
+// app/api/mux/asset-status/[assetId]/route.js
+export async function GET(
+  request: Request, 
+  { params }: { params: { assetId: string } }
+) {
+  try {
+    const { assetId } = params;
+    console.log('AssetId es '+assetId)
+    const asset = await client.video.assets.retrieve(assetId);
+    
+    return NextResponse.json({
+      status: asset.status,
+      playbackIds: asset.playback_ids,
+      errors: asset.errors,
+      duration: asset.duration
+    });
+  } catch (error) {
+    console.error('Error getting asset status:', error);
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
+}

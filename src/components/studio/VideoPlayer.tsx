@@ -30,9 +30,9 @@ export const VideoPlayer = ({
     onEnded
 }: VideoPlayerProps) => {
     const videoRef = useRef<HTMLVideoElement>(null)
-    const [isLoading, setIsLoading] = useState(true)
+    const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
-    const [hasPlayed, setHasPlayed] = useState(false)
+    const [hasPlayed, setHasPlayed] = useState<boolean>(false)
 
     useEffect(() => {
         const video = videoRef.current
@@ -126,7 +126,7 @@ export const VideoPlayer = ({
             setError("Tu navegador no soporta la reproducción de video")
             setIsLoading(false)
         }
-    }, [playbackId, autoplay, onPlay, onEnded, hasPlayed])
+    }, [playbackId, autoplay, onEnded])
 
     if (error) {
         return (

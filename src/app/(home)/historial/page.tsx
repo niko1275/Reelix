@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import ProtectedContent from "@/components/auth/ProtectedContent";
 
 type HistoryItem = {
   id: number;
@@ -43,7 +44,7 @@ export default function HistoryPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   
-  const { data: history, isLoading } = trpc.watchHistory.getAll.useQuery(undefined, {
+  const { data: history, isLoading, error } = trpc.watchHistory.getAll.useQuery(undefined, {
     refetchOnWindowFocus: false,
     staleTime: 30000, // 30 segundos
   });
@@ -53,6 +54,17 @@ export default function HistoryPage() {
       setSelectedItems([]);
     },
   });
+
+  
+  if (error?.data?.code === 'NOT_FOUND') {
+    return (
+        <ProtectedContent 
+            title="Accede a tu Historial"
+            description="Inicia sesión para ver tu Historial"
+            buttonText="Iniciar Sesión"
+        />
+    )
+  }
 
   const filteredHistory = selectedDate
     ? history?.filter(

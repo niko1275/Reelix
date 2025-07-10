@@ -89,7 +89,7 @@ export const commentsRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
@@ -114,7 +114,7 @@ export const commentsRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
@@ -153,7 +153,7 @@ export const commentsRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
@@ -219,7 +219,7 @@ export const commentsRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }

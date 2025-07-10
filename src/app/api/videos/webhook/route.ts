@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { mux } from "@/lib/mux/mux";
 import db from "@/lib/db/db";
 import { videos } from "@/lib/db/schema";
-import { VideoAssetCreatedWebhookEvent, VideoAssetReadyWebhookEvent, VideoAssetErroredWebhookEvent, VideoAssetDeletedWebhookEvent, VideoAssetTrackReadyWebhookEvent } from "@mux/mux-node/resources/webhooks.mjs";
+import {VideoUploadAssetCreatedWebhookEvent, VideoAssetCreatedWebhookEvent, VideoAssetReadyWebhookEvent, VideoAssetErroredWebhookEvent, VideoAssetDeletedWebhookEvent, VideoAssetTrackReadyWebhookEvent } from "@mux/mux-node/resources/webhooks.mjs";
 
 const SIGNING_SECRET = process.env.MUX_SECRET_WEBHOOK;
 
@@ -24,7 +24,7 @@ interface MuxTrackReadyData {
 }
 
 type MuxWebhookEvent = {
-    type: "video.asset.created" | "video.asset.ready" | "video.asset.errored" | "video.asset.deleted" | "video.asset.track.ready";
+    type: "video.upload.created" | "video.asset.created" | "video.asset.ready" | "video.asset.errored" | "video.asset.deleted" | "video.asset.track.ready";
     data: any;
 };
 
@@ -49,9 +49,28 @@ export async function POST(req: NextRequest) {
         }, SIGNING_SECRET); 
 
         const event = payload as MuxWebhookEvent;
-       
+
         console.log("👉 Event type:", event.type);
+        console.log("👉 Full payload:", JSON.stringify(payload, null, 2));
         switch(event.type) {
+
+
+          
+            case "video.upload.created":
+                const createdData2 = payload.data as any;
+                console.log('👉 Upload created data:', JSON.stringify(createdData2, null, 2));
+                
+                // Actualizar el estado del video cuando se crea el upload
+                if (createdData2.upload?.id) {
+                    await db.update(videos)
+                        .set({
+                            muxStatus: "uploading",
+                        })
+                        .where(eq(videos.muxUploadId, createdData2.upload.id));
+                    console.log('👉 Video status updated to uploading for upload_id:', createdData2.upload.id);
+                }
+                break;
+
             case "video.asset.created":
                 const createdData = payload.data as VideoAssetCreatedWebhookEvent["data"];
                 if (!createdData.upload_id) {
@@ -79,9 +98,11 @@ export async function POST(req: NextRequest) {
                 const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
                 
                 // Buscar el video existente por upload_id
-                const existingVideo = await db.query.videos.findFirst({
-                    where: eq(videos.muxUploadId, readyData.upload_id)
-                });
+                const [existingVideo] = await db
+                    .select()
+                    .from(videos)
+                    .where(eq(videos.muxUploadId, readyData.upload_id))
+                    .limit(1);
 
                 if (!existingVideo) {
                     throw new Error("No video found for this upload");

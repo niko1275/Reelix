@@ -1,21 +1,18 @@
-import { router, protectedProcedure, baseProcedure } from "../trpc";
+import { router, protectedProcedure, baseProcedure, publicProcedure, optionalAuthProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and, desc, asc, getTableColumns, sql } from "drizzle-orm";
 import { playlists, playlistVideos, users, videos, subscriptions, videoReactions } from "@/lib/db/schema";
-import type { InferModel } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 
-type Playlist = InferModel<typeof playlists>;
-type PlaylistVideo = InferModel<typeof playlistVideos>;
 
 export const playlistRouter = router({
 
-  getUserPlaylistsWithFirstVideo: baseProcedure.query(async ({ ctx }) => {
+  getUserPlaylistsWithFirstVideo: optionalAuthProcedure.query(async ({ ctx }) => {
     const userId = ctx.auth?.userId;
     if (!userId) {
       throw new TRPCError({
-        code: "UNAUTHORIZED",
+        code: "NOT_FOUND",
         message: "Usuario no autenticado",
       });
       
@@ -46,11 +43,11 @@ export const playlistRouter = router({
   }),
 
   // Get all playlists for the current user
-  getUserPlaylists: protectedProcedure
+  getUserPlaylists: publicProcedure
     .query(async ({ ctx }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
@@ -209,7 +206,7 @@ export const playlistRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
@@ -235,7 +232,7 @@ export const playlistRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
@@ -273,7 +270,7 @@ export const playlistRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
@@ -306,7 +303,7 @@ export const playlistRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
@@ -364,7 +361,7 @@ export const playlistRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
@@ -415,7 +412,7 @@ export const playlistRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
@@ -457,7 +454,7 @@ export const playlistRouter = router({
       .query(async ({ ctx }) => {
         if (!ctx.auth?.userId) {
           throw new TRPCError({
-            code: "UNAUTHORIZED",
+            code: "NOT_FOUND",
             message: "Usuario no autenticado",
           });
         }

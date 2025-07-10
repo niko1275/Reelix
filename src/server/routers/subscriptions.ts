@@ -38,7 +38,7 @@ export const subscriptionsRouter = router({
     .mutation(async ({ ctx, input }): Promise<SubscriptionResponse> => {
       if (!ctx.auth?.userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "NOT_FOUND",
           message: "Usuario no autenticado",
         });
       }
