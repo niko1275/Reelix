@@ -1,4 +1,4 @@
-import { videoGetByOne, videoGetOneOutput } from "@/modules/videos/types"
+import { videoGetByOne } from "@/modules/videos/types"
 import VideoOwner from "./video-owner"
 import { VideoReactions } from "./video-reactions"
 import { Skeleton } from "../ui/skeleton"

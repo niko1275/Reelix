@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CommentInputProps } from "./types";
 import { cn } from "@/lib/utils";
+import Image from 'next/image';
 
 export default function CommentInput({
   currentUser,
@@ -57,10 +58,12 @@ export default function CommentInput({
   return (
     <div className={cn("flex gap-3", isReply ? "pl-12 mt-3" : "")}>
       <Avatar className="h-8 w-8 flex-shrink-0">
-        <img
-          src={currentUser.image}
+        <Image
+          src={currentUser.imageUrl}
           alt={currentUser.name}
-          className="h-full w-full object-cover rounded-full"
+          width={32}
+          height={32}
+          className="rounded-full object-cover"
         />
       </Avatar>
       <div className="flex-1 space-y-2">

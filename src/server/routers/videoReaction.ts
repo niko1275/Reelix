@@ -1,7 +1,7 @@
 import { router, protectedProcedure, optionalAuthProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
-import { videoReactions, videos,users } from "@/lib/db/schema";
+import { videoReactions, videos } from "@/lib/db/schema";
 import type { InferModel } from "drizzle-orm";
 
 type VideoReaction = InferModel<typeof videoReactions>;

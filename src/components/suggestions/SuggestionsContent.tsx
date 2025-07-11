@@ -3,36 +3,10 @@
 import { trpc } from "@/utils/trpc";
 import { Suspense } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
 import { VideoRowCard } from "./VideoRowCard";
-
-interface User {
-  clerkId: string;
-  name: string;
-  imageUrl: string;
-  subscribersCount: number;
-}
-
-interface Video {
-  id: number;
-  title: string;
-  description: string | null;
-  videoUrl: string;
-  thumbnailUrl: string;
-  duration: number;
-  createdAt: string;
-  updatedAt: string;
-  visibility: string;
-  muxUploadId: string;
-  userId: string;
-  user: User;
-}
-
-interface Page {
-  items: Video[];
-  nextCursor: string | null;
-}
+import type { Video } from "./VideoRowCard";
 
 interface SuggestionsContentProps {
   id: string;
@@ -88,9 +62,11 @@ const SuggestionQuery = ({ id }: SuggestionQueryProps) => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold tracking-tight">Sugerencias</h2>
       <div className="">
-        {videos.map((video) => (
-          <VideoRowCard key={video.muxUploadId} data={video as Video}/>
-        ))}
+        {videos
+          .filter((video) => video.user !== null)
+          .map((video) => (
+            <VideoRowCard key={video.muxUploadId} video={video as Video & { user: NonNullable<Video["user"]> }} />
+          ))}
       </div>
       
       {result[1].hasNextPage && (

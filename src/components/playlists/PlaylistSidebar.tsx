@@ -4,19 +4,18 @@ import { trpc } from "@/utils/trpc";
 import { Suspense } from "react";
 import { Skeleton } from "../ui/skeleton";
 import { Card, CardContent } from "../ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
 
 interface PlaylistSidebarProps {
-    currentVideoId: string;
+    currentVideoId?: string;
 }
 
-export function PlaylistSidebar({ currentVideoId }: PlaylistSidebarProps) {
+export function PlaylistSidebar({ }: PlaylistSidebarProps) {
     return (
         <Suspense fallback={<PlaylistSidebarSkeleton />}>
-            <PlaylistSidebarContent currentVideoId={currentVideoId} />
+            <PlaylistSidebarContent />
         </Suspense>
     );
 }
@@ -40,7 +39,7 @@ function PlaylistSidebarSkeleton() {
     );
 }
 
-function PlaylistSidebarContent({ currentVideoId }: PlaylistSidebarProps) {
+function PlaylistSidebarContent() {
     const { data: playlists } = trpc.playlist.getUserPlaylists.useQuery();
 
     if (!playlists?.length) {

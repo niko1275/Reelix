@@ -1,14 +1,15 @@
 "use client";
 
-import { Playlist } from '@/types/playlist';
-import PlaylistCard from './PlaylistCard';
+import { PlaylistCard } from './PlaylistCard';
 import { useState } from 'react';
 import { Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playlistGetUserPlaylistsAndVideosPlaylistsOutput } from '@/modules/videos/types';
 
+type PlaylistItem = playlistGetUserPlaylistsAndVideosPlaylistsOutput[number];
+
 interface PlaylistGridProps {
-  playlists: playlistGetUserPlaylistsAndVideosPlaylistsOutput[];
+  playlists: PlaylistItem[];
   title: string;
   description?: string;
   className?: string;
@@ -29,7 +30,7 @@ export default function PlaylistGrid({ playlists, title, description, className 
         );
       case 'count':
         return [...playlists].sort((a, b) => 
-          (b.videos?.length || 0) - (a.videos?.length || 0)
+          (b.firstVideo ? 1 : 0) - (a.firstVideo ? 1 : 0)
         );
       default:
         return playlists;

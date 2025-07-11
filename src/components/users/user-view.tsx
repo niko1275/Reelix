@@ -1,10 +1,9 @@
 "use client"
 import { trpc } from "@/utils/trpc"
 import { Suspense } from "react"
-import { YouTubeHeader } from "./YoutubeHeader"
 import { ChannelBanner } from "./ChannelBanner"
 import { ChannelInfo } from "./ChannelInfo"
-import { ChannelNavigation } from "./ChanelNavigation"
+import { ChanelNavigation } from "./ChanelNavigation"
 import { VideoGrid } from "./VideoGrid"
 
 interface UserViewQueryProps {
@@ -44,8 +43,11 @@ return(
             totalViews="0"
           />
           
-          <ChannelNavigation tabs={[{name: "Videos", isActive: true}]} />
-          <VideoGrid videos={data[0].videosUser} />
+          <ChanelNavigation tabs={[{name: "Videos", isActive: true}]} />
+          <VideoGrid videos={data[0].videosUser.map(video => ({
+            ...video,
+            publishedAt: video.createdAt
+          }))} />
         </div>
       </main>
     </div>

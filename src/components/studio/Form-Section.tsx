@@ -5,12 +5,10 @@ import { Suspense, useEffect, useState } from "react"
 import { Button } from "../ui/button"
 import { DropdownMenu } from "@radix-ui/react-dropdown-menu"
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
-import { Copy, FolderLock, MoreHorizontalIcon, MoreVerticalIcon, TrashIcon } from "lucide-react"
+import { Copy, FolderLock, MoreVerticalIcon, TrashIcon } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FormProvider, useForm } from "react-hook-form"
 import { z } from "zod"
-import type { InferModel } from "drizzle-orm"
-import { videos } from "@/lib/db/schema"
 import { FormField, FormLabel, FormItem, FormControl, FormMessage } from "../ui/form"
 import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
@@ -248,7 +246,7 @@ const FormSection = ({ videoId }: FormSectionProps) => {
                             <div className="flex flex-col gap-4 bg-gray-200 p-4 rounded-md">
                                 <div className="aspect-video rounded-md overflow-hidden">
                                     <VideoPlayer thumnailurl={video.thumbnailUrl}
-                                     playbackId={video.playbackId} autoplay={false}/>
+                                     playbackId={video.playbackId || ""} autoplay={false}/>
                                 </div>
                                 <div className="flex flex-col gap-2 ">
                                 <p className="text-sm text-blue-600 p-0 flex flex-wrap gap-2 break-all whitespace-normal">

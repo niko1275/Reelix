@@ -126,7 +126,7 @@ export const VideoPlayer = ({
             setError("Tu navegador no soporta la reproducción de video")
             setIsLoading(false)
         }
-    }, [playbackId, autoplay, onEnded])
+    }, [playbackId, autoplay, onEnded, onPlay, hasPlayed])
 
     if (error) {
         return (

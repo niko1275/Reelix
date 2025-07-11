@@ -16,7 +16,7 @@ function getBaseUrl() {
 }
 
 export const trpcServer = createTRPCNext<AppRouter>({
-  config(opts) {
+  config() {
     return {
       links: [
         httpBatchLink({

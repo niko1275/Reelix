@@ -3,16 +3,18 @@
 import { trpc } from "@/utils/trpc"
 import { Suspense } from "react"
 import { VideoRowCard } from "./VideoRowCard"
+import type { Video } from "./VideoRowCard"
 import { Skeleton } from "../ui/skeleton"
-import { useAuth } from "@clerk/nextjs"
+
+
+
 
 interface SuggestionsProps {
     id: string;
 }
 
 export function Suggestions({ id }: SuggestionsProps) {
-    const { isSignedIn } = useAuth();
-
+   
 
     return (
         <Suspense fallback={<SuggestionsSkeleton />}>
@@ -59,9 +61,11 @@ function SuggestionsContent({ id }: SuggestionsProps) {
     return (
         <div className="space-y-4">
             {data.pages.map((page) =>
-                page.items.map((video) => (
-                    <VideoRowCard key={video.id} video={video as any} />
-                ))
+                page.items
+                    .filter((video) => video.user !== null)
+                    .map((video) => (
+                        <VideoRowCard key={video.id} video={video as Video & { user: NonNullable<Video["user"]> }} />
+                    ))
             )}
             {hasNextPage && (
                 <button

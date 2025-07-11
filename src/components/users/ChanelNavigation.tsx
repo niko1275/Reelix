@@ -1,6 +1,5 @@
 "use client"
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 interface Tab {
   name: string;
@@ -12,8 +11,7 @@ interface ChannelNavigationProps {
   className?: string;
 }
 
-export function ChannelNavigation({ tabs, className }: ChannelNavigationProps) {
-  const [activeTab, setActiveTab] = useState('videos');
+export function ChanelNavigation({ tabs, className }: ChannelNavigationProps) {
   return (
     <div className={cn("border-b", className)}>
       <div className="overflow-x-auto scrollbar-hide">

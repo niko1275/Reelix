@@ -1,4 +1,4 @@
-import { router, protectedProcedure, baseProcedure, publicProcedure, optionalAuthProcedure } from "../trpc";
+import { router, protectedProcedure, publicProcedure, optionalAuthProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and, desc, asc, getTableColumns, sql } from "drizzle-orm";
 import { playlists, playlistVideos, users, videos, subscriptions, videoReactions } from "@/lib/db/schema";
@@ -466,12 +466,14 @@ export const playlistRouter = router({
           videos: {
             id: videos.id,
             title: videos.title,
-            url: videos.url,
+            videoUrl: videos.videoUrl,
           },
         })
         .from(playlists)
         .innerJoin(playlistVideos, eq(playlistVideos.playlistId, playlists.id))
         .innerJoin(videos, eq(videos.id, playlistVideos.videoId))
-        .where(eq(playlists.userId, playlistVideos.userId));
+        .where(eq(playlists.userId, ctx.auth.userId));
+        
+        return playlistsWithVideos;
       }),
 }); 

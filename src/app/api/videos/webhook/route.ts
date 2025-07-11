@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { mux } from "@/lib/mux/mux";
 import db from "@/lib/db/db";
 import { videos } from "@/lib/db/schema";
-import {VideoUploadAssetCreatedWebhookEvent, VideoAssetCreatedWebhookEvent, VideoAssetReadyWebhookEvent, VideoAssetErroredWebhookEvent, VideoAssetDeletedWebhookEvent, VideoAssetTrackReadyWebhookEvent } from "@mux/mux-node/resources/webhooks.mjs";
+import { VideoAssetCreatedWebhookEvent, VideoAssetReadyWebhookEvent, VideoAssetErroredWebhookEvent, VideoAssetDeletedWebhookEvent } from "@mux/mux-node/resources/webhooks.mjs";
 
 const SIGNING_SECRET = process.env.MUX_SECRET_WEBHOOK;
 
@@ -23,9 +23,16 @@ interface MuxTrackReadyData {
     asset: MuxAsset;
 }
 
+interface MuxUploadCreatedData {
+    upload: {
+        id: string;
+        status: string;
+    };
+}
+
 type MuxWebhookEvent = {
     type: "video.upload.created" | "video.asset.created" | "video.asset.ready" | "video.asset.errored" | "video.asset.deleted" | "video.asset.track.ready";
-    data: any;
+    data: VideoAssetCreatedWebhookEvent["data"] | VideoAssetReadyWebhookEvent["data"] | VideoAssetErroredWebhookEvent["data"] | VideoAssetDeletedWebhookEvent["data"] | MuxTrackReadyData | MuxUploadCreatedData;
 };
 
 export async function POST(req: NextRequest) {
@@ -57,7 +64,7 @@ export async function POST(req: NextRequest) {
 
           
             case "video.upload.created":
-                const createdData2 = payload.data as any;
+                const createdData2 = payload.data as MuxUploadCreatedData;
                 console.log('👉 Upload created data:', JSON.stringify(createdData2, null, 2));
                 
                 // Actualizar el estado del video cuando se crea el upload

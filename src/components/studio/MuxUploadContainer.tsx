@@ -1,21 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import MuxUploadButton from './MuxUploadButton';
-import ModalCargarMux from './ModalCargarMux';
+import { ModalCargarMux } from "./ModalCargarMux";
 
 export default function MuxUploadContainer() {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <>
-      <MuxUploadButton onOpen={() => setIsOpen(true)}>
+      <MuxUploadButton onOpen={() => {}}>
         Cargar Video
       </MuxUploadButton>
-      <ModalCargarMux 
-        isOpen={isOpen} 
-        onClose={() => setIsOpen(false)} 
-      />
+      <ModalCargarMux />
     </>
   );
 } 

@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { router, publicProcedure,protectedProcedure } from '../trpc';
+import { router,protectedProcedure } from '../trpc';
 import db from '@/lib/db/db';
 import { videoViews } from '@/lib/db/schema';
 import { and, eq } from 'drizzle-orm';

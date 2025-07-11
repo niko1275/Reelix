@@ -3,11 +3,6 @@ import { ClerkMiddlewareAuthObject, getAuth } from '@clerk/nextjs/server';
 import db from '@/lib/db/db';
 import { auth } from '@clerk/nextjs/server'
 import { cache } from 'react';
-import { videoReactionsRouter } from "./routers/videoReaction";
-import { subscriptionsRouter } from "./routers/subscriptions";
-import { userRouter } from "./routers/user";
-import { videoRouter } from "./routers/video";
-import { categoryRouter } from "./routers/category";
 
 export interface Context {
   auth: ReturnType<typeof getAuth> | null;

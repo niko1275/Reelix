@@ -14,7 +14,7 @@ export function VideoContent({ videoId }: VideoContentProps) {
                 <VideoView videoId={videoId}/>
             </div>
             <div className="col-span-1 my-10">
-                <VideoSidebar videoId={videoId} />
+                <VideoSidebar currentVideoId={videoId} />
             </div>
         </div>
     );

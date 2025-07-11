@@ -1,30 +1,18 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search, Bell, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 import { UserButton, SignInButton, useUser, useAuth } from "@clerk/nextjs"
-import { useState } from "react"
+
 
 import Link from "next/link"
 import Image from "next/image"
-
-import { NavbarCargarModal } from "./NavbarCargarModal"
 import { SidebarTrigger } from "../ui/sidebar"
 
 export function NavbarStudio() {
   const { isSignedIn } = useUser()
   const { isLoaded } = useAuth()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-
+ 
 
   return (
    <>

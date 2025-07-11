@@ -11,15 +11,17 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
+
 const badges = [
-  { id: 1, name: "React", variant: "default" },
-  { id: 2, name: "TypeScript", variant: "secondary" },
-  { id: 3, name: "Next.js", variant: "destructive" },
-  { id: 4, name: "Node.js", variant: "outline" },
-  { id: 5, name: "Tailwind", variant: "default" },
-  { id: 6, name: "tRPC", variant: "secondary" },
-  { id: 7, name: "Prisma", variant: "destructive" },
-  { id: 8, name: "PostgreSQL", variant: "outline" },
+  { id: 1, name: "React", variant: "default" as BadgeVariant },
+  { id: 2, name: "TypeScript", variant: "secondary" as BadgeVariant },
+  { id: 3, name: "Next.js", variant: "destructive" as BadgeVariant },
+  { id: 4, name: "Node.js", variant: "outline" as BadgeVariant },
+  { id: 5, name: "Tailwind", variant: "default" as BadgeVariant },
+  { id: 6, name: "tRPC", variant: "secondary" as BadgeVariant },
+  { id: 7, name: "Prisma", variant: "destructive" as BadgeVariant },
+  { id: 8, name: "PostgreSQL", variant: "outline" as BadgeVariant },
 ]
 
 export function BadgeCarousel() {
@@ -38,7 +40,7 @@ export function BadgeCarousel() {
               <div className="p-1">
                 <Card>
                   <CardContent className="flex items-center justify-center p-6">
-                    <Badge variant={badge.variant as any} className="text-lg">
+                    <Badge variant={badge.variant} className="text-lg">
                       {badge.name}
                     </Badge>
                   </CardContent>

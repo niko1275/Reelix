@@ -14,10 +14,53 @@ interface VideoCommentsProps {
   videoId: number
 }
 
+interface User {
+  clerkId: string;
+  name: string;
+  email: string;
+  id: number;
+  imageUrl: string;
+  createdAt: string;
+  updatedAt: string;
+  bannerUrl: string | null;
+  bannerKey: string | null;
+}
+
+// Interfaz que coincide exactamente con la estructura del backend
+interface BackendComment {
+  id: number;
+  content: string;
+  videoId: number;
+  userId: string;
+  parentId: number | null;
+  replyingTo: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: User;
+  replies: BackendComment[];
+  replyingToUser?: User | null;
+}
+
+// Interfaz para comentarios aplanados
+interface FlattenedComment {
+  id: number;
+  content: string;
+  videoId: number;
+  userId: string;
+  parentId: number | null;
+  replyingTo: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: User;
+  replies: BackendComment[];
+  replyingToUser?: User | null;
+  isReply: boolean;
+  isNestedReply: boolean;
+}
+
 export const VideoComments = ({ videoId }: VideoCommentsProps) => {
   const { userId } = useAuth()
   const utils = trpc.useUtils()
-  const [comment, setComment] = useState("")
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [editingComment, setEditingComment] = useState<number | null>(null)
   const [editContent, setEditContent] = useState("")
@@ -27,9 +70,8 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
     { enabled: !!videoId }
   )
  
-  const { mutate: createComment, isPending: isCreating } = trpc.comments.createComment.useMutation({
+  const { mutate: createComment} = trpc.comments.createComment.useMutation({
     onSuccess: () => {
-      setComment("")
       setReplyingTo(null)
       utils.comments.getVideoComments.invalidate({ videoId })
       toast.success("Comentario publicado")
@@ -39,7 +81,7 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
     }
   })
 
-  const { mutate: updateComment, isPending: isUpdating } = trpc.comments.updateComment.useMutation({
+  const { mutate: updateComment} = trpc.comments.updateComment.useMutation({
     onSuccess: () => {
       setEditingComment(null)
       setEditContent("")
@@ -51,7 +93,7 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
     }
   })
 
-  const { mutate: deleteComment, isPending: isDeleting } = trpc.comments.deleteComment.useMutation({
+  const { mutate: deleteComment} = trpc.comments.deleteComment.useMutation({
     onSuccess: () => {
       utils.comments.getVideoComments.invalidate({ videoId })
       toast.success("Comentario eliminado")
@@ -60,21 +102,6 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
       toast.error(error.message || "Error al eliminar el comentario")
     }
   })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!userId) {
-      toast.error("Debes iniciar sesión para comentar")
-      return
-    }
-    if (!comment.trim()) return
-
-    createComment({
-      content: comment,
-      videoId,
-      parentId: replyingTo || undefined
-    })
-  }
 
   const handleUpdate = (commentId: number) => {
     if (!editContent.trim()) return
@@ -127,7 +154,7 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
   }
 
   const CommentItem = ({ comment, isReply = false, isNestedReply = false }: { 
-    comment: any, 
+    comment: BackendComment, 
     isReply?: boolean,
     isNestedReply?: boolean 
   }) => {
@@ -173,7 +200,7 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
           
           {isEditing ? (
             <CommentForm
-              onSubmit={(content) => handleUpdate(comment.id)}
+              onSubmit={() => handleUpdate(comment.id)}
               initialValue={editContent}
               buttonText="Actualizar"
             />
@@ -211,11 +238,6 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
                 <button
                   onClick={() => {
                     setReplyingTo(comment.id)
-                    if (isReply) {
-                      setComment(`@${comment.user.name} `)
-                    } else {
-                      setComment("")
-                    }
                   }}
                   className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                 >
@@ -274,16 +296,15 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
   }
 
   // Combinar comentarios principales y respuestas en una sola lista
-  const flattenComments = (comment: any, parentName?: string, isNestedReply = false): any[] => {
-    const result = [{
+  const flattenComments = (comment: BackendComment, parentName?: string, isNestedReply = false): FlattenedComment[] => {
+    const result: FlattenedComment[] = [{
       ...comment,
       isReply: !!parentName,
       isNestedReply,
-      replyingTo: comment.replyingTo
     }];
 
     if (comment.replies && comment.replies.length > 0) {
-      comment.replies.forEach((reply: any) => {
+      comment.replies.forEach((reply: BackendComment) => {
         result.push(...flattenComments(reply, comment.user.name, true));
       });
     }
@@ -291,9 +312,12 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
     return result;
   };
 
-  const allComments = comments?.reduce((acc: any[], comment: any) => {
-    return [...acc, ...flattenComments(comment)];
-  }, []);
+  const allComments: FlattenedComment[] = [];
+  if (comments) {
+    comments.forEach((comment) => {
+      allComments.push(...flattenComments(comment as unknown as BackendComment));
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -312,8 +336,7 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
 
       {/* Lista de comentarios y respuestas */}
       <div className="space-y-4">
-        {allComments?.map((comment, index) => (
-          console.log("Comentario item", comment),
+        {allComments.map((comment: FlattenedComment, index: number) => (
           <CommentItem 
             key={index} 
             comment={comment} 

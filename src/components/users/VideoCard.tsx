@@ -6,25 +6,23 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
-interface VideoCardProps {
-  id: string;
+interface Video {
+  id: number;
   title: string;
   thumbnailUrl: string;
-  duration: string;
-  views: string;
+  duration: number;
+  views: number;
   publishedAt: string;
+  createdAt: string;
+}
+
+interface VideoCardProps {
+  video: Video;
   className?: string;
-  createdAt: Date;
 }
 
 export function VideoCard({
-  id,
-  title,
-  thumbnailUrl,
-  duration,
-  views,
-  publishedAt,
-  createdAt,  
+  video,
   className,
 }: VideoCardProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -37,8 +35,8 @@ export function VideoCard({
     >
       <div className="relative aspect-video overflow-hidden rounded-lg">
         <Image
-          src={thumbnailUrl}
-          alt={title}
+          src={video.thumbnailUrl}
+          alt={video.title}
           fill
           className={cn(
             "object-cover transition-transform duration-300",
@@ -46,18 +44,18 @@ export function VideoCard({
           )}
         />
         <div className="absolute bottom-1 right-1 bg-black/80 px-1 py-0.5 text-xs text-white rounded">
-          {duration} Segundos
+          {video.duration} Segundos
         </div>
       </div>
       
       <div className="mt-2">
-        <h3 className="font-medium line-clamp-2 text-sm">{title}</h3>
+        <h3 className="font-medium line-clamp-2 text-sm">{video.title}</h3>
         <div className="mt-1 flex text-xs text-muted-foreground">
-          <span>{views} views</span>
+          <span>{video.views} views</span>
           <span className="mx-1">•</span>
-          <span>{publishedAt}</span>
+          <span>{video.publishedAt}</span>
           <span>
-                    {formatDistanceToNow(new Date(createdAt), {
+                    {formatDistanceToNow(new Date(video.createdAt), {
                         addSuffix: true,
                         locale: es,
                     })}

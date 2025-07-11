@@ -9,7 +9,6 @@ import CommentSort from "./CommentSort";
 import { CommentSectionProps, Comment } from "./types";
 
 export default function CommentSection({
-  videoId,
   comments: initialComments,
   currentUser,
   totalComments,
@@ -203,7 +202,7 @@ export default function CommentSection({
     setSortOption(option);
     
     // Sort the comments
-    let sortedComments = [...comments];
+    const sortedComments = [...comments];
     if (option === "top") {
       sortedComments.sort((a, b) => b.likes.count - a.likes.count);
     } else if (option === "newest") {

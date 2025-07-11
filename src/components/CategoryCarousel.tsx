@@ -38,16 +38,7 @@ const CategoryCarousel = () => {
     router.push(`?${params.toString()}`)
   }
 
-  const handleSearch = (searchTerm: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (searchTerm) {
-      params.set("search", searchTerm);
-    } else {
-      params.delete("search");
-    }
-    router.push(`?${params.toString()}`);
-  };
-
+ 
   return (
     <div className="w-full px-2 sm:px-4 md:px-6 flex justify-center">
       <Carousel

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, boolean, uniqueIndex, integer, varchar, PgTableWithColumns } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, boolean, uniqueIndex, integer, varchar } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 
@@ -13,8 +13,8 @@ export const users = pgTable('users', {
   imageUrl: text('image_url').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  bannerUrl: text('banner_url').notNull(),
-  bannerKey: text('banner_key').notNull(),
+  bannerUrl: text('banner_url'),
+  bannerKey: text('banner_key'),
 });
 
 // Relaciones de usuarios
@@ -41,7 +41,7 @@ export const categories = pgTable('categories', {
 },(t)=>[uniqueIndex('name_unique').on(t.name)]);
 
 // Tabla de videos
-export const videos: PgTableWithColumns<any> = pgTable('videos', {
+export const videos = pgTable('videos', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description'),
@@ -53,13 +53,13 @@ export const videos: PgTableWithColumns<any> = pgTable('videos', {
   userId: text('user_id').notNull().references(() => users.clerkId, { onDelete: 'cascade' }),
 
   muxAssetId: text('mux_asset_id').notNull(),
-  muxStatus: text('mux_status').notNull(),
+  muxStatus: text('mux_status').notNull().default('uploading'),
   muxUploadId: text('mux_upload_id').notNull(),
   categoryId: integer('category_id').references(() => categories.id),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  playbackId: text('playback_id').notNull(),
-  visibility: text('visibility').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  playbackId: text('playback_id'),
+  visibility: text('visibility').notNull().default('public'),
 });
 
 export const videoInsertSchema = createInsertSchema(videos);
@@ -171,12 +171,12 @@ export const subscriptionInsertSchema = createInsertSchema(subscriptions);
 export const subscriptionUpdateSchema = createUpdateSchema(subscriptions);
 
 // Tabla de comentarios
-export const comments: PgTableWithColumns<any> = pgTable('comments', {
+export const comments = pgTable('comments', {
   id: serial('id').primaryKey(),
   content: text('content').notNull(),
   videoId: integer('video_id').notNull().references(() => videos.id, { onDelete: 'cascade' }),
   userId: text('user_id').notNull().references(() => users.clerkId, { onDelete: 'cascade' }),
-  parentId: integer('parent_id').references(() => comments.id, { onDelete: 'cascade' }),
+  parentId: integer('parent_id'),
   replyingTo: text('replying_to'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -251,13 +251,13 @@ export const playlists = pgTable('playlists', {
   name: text('name').notNull(),
   description: text('description'),
   userId: text('user_id').notNull().references(() => users.clerkId, { onDelete: 'cascade' }),
-  isPublic: boolean('is_public').default(true).notNull(),
+  isPublic: boolean('is_public').notNull().default(true),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Tabla de videos en playlists
-export const playlistVideos: PgTableWithColumns<any> = pgTable('playlist_videos', {
+export const playlistVideos = pgTable('playlist_videos', {
   id: serial('id').primaryKey(),
   playlistId: integer('playlist_id').notNull().references(() => playlists.id, { onDelete: 'cascade' }),
   videoId: integer('video_id').notNull().references(() => videos.id, { onDelete: 'cascade' }),

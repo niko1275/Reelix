@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Providers } from "../providers";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-
-import { Navbar } from "@/components/Navbar";
-import { NavbarStudio } from "@/components/studio/NavbarStudio";
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/studio/StudioSidebar";
 import { cookies } from "next/headers"
 import NavbarStudioSection from "@/components/studio/NavbarStudioSection";

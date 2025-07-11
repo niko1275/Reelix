@@ -1,12 +1,6 @@
 import UserView from "@/components/users/user-view"
 import { HydrateClient, trpc } from "@/server/server"
 
-
-interface UserPageProps {
-    params: {
-      clerkId: string
-    }
-  }
 export default async  function  UserPage({
     params,
   }: {

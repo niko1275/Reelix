@@ -1,8 +1,8 @@
 import MuxUploader, { MuxUploaderDrop, MuxUploaderProgress, MuxUploaderStatus } from '@mux/mux-uploader-react'
 
 interface StudioUploaderProps {
-    endpoint: string | null
-    onsuccess: (data: any) => void
+    endpoint: string;
+    onsuccess: () => void;
 }
 
 export const StudioUploader = ({endpoint, onsuccess}: StudioUploaderProps) => {

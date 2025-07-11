@@ -1,18 +1,62 @@
 "use client";
 
 import { trpc } from "@/utils/trpc";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect } from "react";
 import { VideoPlayer } from "../studio/VideoPlayer";
 import { VideoTopRow } from "../view/video-top-row";
 import VideoDescription from "../view/video-description";
 import { VideoComments } from "../view/video-comments";
 import { useRouter, useSearchParams } from "next/navigation";
-import { playlists, playlistVideos, videos } from "@/lib/db/schema";
-import type { InferModel } from "drizzle-orm";
 
-type Playlist = InferModel<typeof playlists>;
-type PlaylistVideo = InferModel<typeof playlistVideos>;
-type Video = InferModel<typeof videos>;
+interface User {
+  id: number;
+  clerkId: string;
+  name: string;
+  email: string;
+  imageUrl: string;
+  createdAt: string;
+  updatedAt: string;
+  bannerUrl: string | null;
+  bannerKey: string | null;
+  subscribersCount: number;
+  isSubscribed: boolean;
+}
+
+interface Video {
+  id: number;
+  title: string;
+  description: string | null;
+  videoUrl: string;
+  thumbnailUrl: string;
+  duration: number;
+  views: number;
+  isPublished: boolean;
+  userId: string;
+  muxAssetId: string;
+  muxStatus: string;
+  muxUploadId: string;
+  categoryId: number | null;
+  createdAt: string;
+  updatedAt: string;
+  playbackId: string | null;
+  visibility: string;
+  user: User | null;
+  stats: {
+    likes: number;
+    dislikes: number;
+    userReaction: 'like' | 'dislike' | null;
+  };
+}
+
+interface Playlist {
+  id: number;
+  name: string;
+  description: string | null;
+  userId: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 type PlaylistWithVideos = Playlist & {
   videos: { video: Video }[];
@@ -90,10 +134,10 @@ function PlaylistVideoViewContent({ playlistId }: PlaylistVideoViewProps) {
     const handleVideoStart = () => {
         if (currentVideo) {
             addView.mutate(
-                { videoId: currentVideo.id },
+                { videoId: currentVideo.muxUploadId },
                 {
                     onSuccess: () => {
-                        utils.video.getone.invalidate({ id: currentVideo.id.toString() });
+                        utils.video.getone.invalidate({ id: currentVideo.muxUploadId });
                     }
                 }
             );
@@ -113,7 +157,7 @@ function PlaylistVideoViewContent({ playlistId }: PlaylistVideoViewProps) {
             <div className="aspect-video relative rounded-md">
                 <VideoPlayer
                     thumnailurl={currentVideo.thumbnailUrl}
-                    playbackId={currentVideo.playbackId}
+                    playbackId={currentVideo.playbackId || ""}
                     autoplay={false}
                     onPlay={handleVideoStart}
                     onEnded={handleVideoEnd}
@@ -122,11 +166,11 @@ function PlaylistVideoViewContent({ playlistId }: PlaylistVideoViewProps) {
 
             <VideoTopRow video={currentVideo} />
             <VideoDescription
-                description={currentVideo.description}
-                compactView={currentVideo.views?.toLocaleString?.() ?? "0"}
-                compactdate={currentVideo.createdAt?.toLocaleString?.() ?? ""}
-                expandeddate={currentVideo.createdAt?.toLocaleString?.() ?? ""}
-                expandedView={currentVideo.views?.toLocaleString?.() ?? "0"}
+                description={currentVideo.description || ""}
+                publishedAt={new Date(currentVideo.createdAt).toLocaleDateString()}
+                viewCount={currentVideo.views}
+                likeCount={currentVideo.stats?.likes || 0}
+                dislikeCount={currentVideo.stats?.dislikes || 0}
             />
             <VideoComments videoId={currentVideo.id} />
         </div>

@@ -7,26 +7,17 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+
 } from "@/components/ui/sidebar"
 import { UserAvatar } from "../user-avatar/user-avatar"
-import { useAuth, useUser } from "@clerk/nextjs"
+import {  useUser } from "@clerk/nextjs"
 import Link from "next/link";
 import { Video } from "lucide-react";
 
 export function AppSidebar() {
   const { user } = useUser();
-  const {
-    state,
-    open,
-    setOpen,
-    openMobile,
-    setOpenMobile,
-    isMobile,
-    toggleSidebar,
-  } = useSidebar()
+
   
   return (
     <Sidebar className="bg-white border-r border-gray-200 shadow-sm">
@@ -48,7 +39,7 @@ export function AppSidebar() {
   
               <SidebarMenuItem>
                 <Link
-                  href="/"
+                  href="/studio"
                   className="flex items-center gap-3 text-gray-700 hover:text-blue-600 transition-colors duration-200 cursor-pointer font-medium"
                 >
                   <span>Content</span>

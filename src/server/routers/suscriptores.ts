@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { subscriptions, } from "@/lib/db/schema"
+import { subscriptions, users } from "@/lib/db/schema"
 import { eq, and, sql } from "drizzle-orm"
 import { router,protectedProcedure } from "../trpc"
 
@@ -102,4 +102,22 @@ export const subscriptionsRouter = router({
 
       return { count: Number(result[0].count) }
     }),
+
+  getUserSubscriptions: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.auth?.userId;
+    if (!userId) return [];
+
+    // Join manual para obtener los datos del usuario suscrito
+    const subs = await ctx.db
+      .select({
+        id: users.clerkId,
+        name: users.name,
+        imageUrl: users.imageUrl,
+      })
+      .from(subscriptions)
+      .innerJoin(users, eq(subscriptions.subscribedToId, users.clerkId))
+      .where(eq(subscriptions.subscriberId, userId));
+
+    return subs;
+  }),
 }) 

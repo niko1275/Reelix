@@ -7,15 +7,15 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar"
 
 
 import Link from "next/link"
-import { Home, SquarePlay, Video,ThumbsUp,ListVideo,History, PlaySquare } from "lucide-react"
-import { Separator } from "./ui/separator"
+import { Home, ThumbsUp, PlaySquare, HistoryIcon } from "lucide-react"
+
+import { trpc } from "@/utils/trpc";
+import Image from "next/image";
 
 
 function SidebarItem({
@@ -42,27 +42,30 @@ function SidebarItem({
     </div>
   );
 }
-export default function SidebarHomeMobile() {
-    const { state , isMobile} = useSidebar()
-    const isopen2 = state === "expanded"  ? true : false
-    const links = [
-        {
-          href: "/",
-          label: "Inicio",
-          icon: Home,
-        },
-  
-        {
-          href: "/subscriptions",
-          label: "Suscripciones",
-          icon: Video,
-        },
-   
-      ]
 
-     
-    
-return(
+function SubscriptionItem({ name, imageUrl }: { name: string; imageUrl: string }) {
+  return (
+    <div className="flex items-center py-2 px-3 rounded-lg hover:bg-secondary transition-colors">
+      <div className="w-8 h-8 rounded-full mr-3 relative">
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          className="object-cover rounded-full"
+        />
+      </div>
+      <span className="text-sm">{name}</span>
+    </div>
+  );
+}
+
+export default function SidebarHomeMobile() {
+    const { state } = useSidebar()
+    const isopen2 = state === "expanded"  ? true : false
+
+    const { data: subscriptions } = trpc.subscriptions.getUserSubscriptions.useQuery();
+
+    return(
 <Sidebar className="border-r overflow-hidden">
       <SidebarContent className="p-6">
         <SidebarGroup>
@@ -84,10 +87,25 @@ return(
           <Link href="/playlist">
           <SidebarItem icon={<PlaySquare />} text="Playlists" isOpen={isopen2} />
           </Link>
-                
-          
+
+          <Link href="/historial">
+          <SidebarItem icon={<HistoryIcon />} text="Historial" isOpen={isopen2} />
+          </Link>
+
+          <Link href="/likedvideos">
+          <SidebarItem icon={<ThumbsUp />} text="Videos que me gustaron" isOpen={isopen2} />
+          </Link>
 
             </SidebarMenu>
+            {/* Subscriptions */}
+            {subscriptions && subscriptions.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-sm font-medium mb-2 px-2">SUSCRIPCIONES</h3>
+                {subscriptions.map(sub => (
+                  <SubscriptionItem key={sub.id} name={sub.name} imageUrl={sub.imageUrl} />
+                ))}
+              </div>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

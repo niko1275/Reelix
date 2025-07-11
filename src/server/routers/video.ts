@@ -1,36 +1,11 @@
 import { z } from 'zod';
-import { router, publicProcedure, protectedProcedure, optionalAuthProcedure, baseProcedure } from '../trpc';
+import { router, protectedProcedure, publicProcedure, optionalAuthProcedure } from '../trpc';
 import { users, videos, videoViews, videoReactions, subscriptions } from '@/lib/db/schema';
-import { and, desc, eq, getTableColumns, lt, not, or, sql, gt } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, lt, not, or, sql } from 'drizzle-orm';
 import db from '@/lib/db/db';
 import { TRPCError } from '@trpc/server';
 import { mux } from '@/lib/mux/mux';
-import { NextRequest, NextResponse } from "next/server";
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-const s3Client = new S3Client({
-    region: process.env.AWS_REGION!,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
-    }
-});
-
-const generatePresignedUrl = async (key: string) => {
-    const command = new GetObjectCommand({
-        Bucket: process.env.AWS_BUCKET_NAME!,
-        Key: key
-    });
-
-    try {
-        const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); 
-        return url;
-    } catch (error) {
-        console.error('Error generating presigned URL:', error);
-        return null;
-    }
-};
 
 export const videoRouter = router({
 
@@ -40,7 +15,7 @@ export const videoRouter = router({
       id: z.string(),
     })
   )
-  .mutation(async ({ ctx, input }) => {
+  .mutation(async ({ input }) => {
     const { id } = input;
 
     if (!id) {
@@ -69,7 +44,7 @@ export const videoRouter = router({
     }
    const thumbnailUrl = `https://image.mux.com/${videoexist.thumbnailUrl}/thumbnail.jpg`;
     
-    const [updated] = await db
+    await db
       .update(videos)
       .set({
         thumbnailUrl: thumbnailUrl,
@@ -208,13 +183,12 @@ export const videoRouter = router({
     .input(z.object({
       id: z.string(),
     }))
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const { id } = input;
-      const userId = ctx.userId;
   
       try {
         // Buscar por muxUploadId (UUID string)
-        let [video] = await db
+        const [video] = await db
           .select()
           .from(videos)
           .where(eq(videos.muxUploadId, id));
@@ -245,7 +219,7 @@ export const videoRouter = router({
         categoryId: z.number().nullable().optional(),
         isPublished: z.boolean().optional(),
         thumbnailUrl: z.string().nullable().optional(),
-        visibility: z.string().nullable().optional(),
+        visibility: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const { id, ...data } = input;
@@ -406,7 +380,7 @@ export const videoRouter = router({
         };
       }),
 
-      getVideoSuggestionsHome: baseProcedure
+      getVideoSuggestionsHome: publicProcedure
       .input(z.object({
       
         limit: z.number().default(10),
@@ -448,7 +422,7 @@ export const videoRouter = router({
         };
       }),
 
-      getHomeVideos: baseProcedure
+      getHomeVideos: publicProcedure
       .input(z.object({
         limit: z.number().min(1).max(50).default(10),
         cursor: z.string().nullish(),
@@ -601,7 +575,7 @@ export const videoRouter = router({
         }
 
         // Try to insert the view, ignoring if it already exists
-        await ctx.db
+        const inserted = await ctx.db
           .insert(videoViews)
           .values({
             videoId: video.id,
@@ -609,15 +583,18 @@ export const videoRouter = router({
           })
           .onConflictDoNothing({
             target: [videoViews.userId, videoViews.videoId],
-          });
-
-        // Update the video's view count
-        await ctx.db
-          .update(videos)
-          .set({
-            views: sql`${videos.views} + 1`
           })
-          .where(eq(videos.id, video.id));
+          .returning();
+
+        // Update the video's view count ONLY if a new view was inserted
+        if (inserted.length > 0) {
+          await ctx.db
+            .update(videos)
+            .set({
+              views: sql`${videos.views} + 1`
+            })
+            .where(eq(videos.id, video.id));
+        }
 
         return { success: true };
       } catch (error) {

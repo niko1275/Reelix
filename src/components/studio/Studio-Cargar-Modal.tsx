@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
 import { Button } from "../ui/button";
-import { Loader2Icon, PlusIcon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { ResponsiveModal } from "./Responsive-modal";
 import { StudioUploader } from "./StudioUploader";

@@ -1,6 +1,5 @@
 "use client"
 import Image from "next/image";
-import { CheckCircle, ThumbsUp, ShareIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";

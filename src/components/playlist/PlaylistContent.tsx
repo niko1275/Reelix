@@ -5,7 +5,8 @@ import ProtectedContent from "@/components/auth/ProtectedContent"
 import { trpc } from "@/utils/trpc";
 
 export function PlaylistContent() {
-    const { data: playlists, isLoading, error } = trpc.playlist.getUserPlaylistsWithFirstVideo.useQuery();
+    const { isLoading, error } = trpc.playlist.getUserPlaylistsWithFirstVideo.useQuery();
+    
     console.log("error", error?.data?.code)
     if (error?.data?.code === 'NOT_FOUND') {
         return (

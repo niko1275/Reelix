@@ -5,16 +5,52 @@ import { Suspense } from "react";
 import { Skeleton } from "../ui/skeleton";
 import { Card, CardContent } from "../ui/card";
 import Image from "next/image";
-import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { playlists, playlistVideos, videos } from "@/lib/db/schema";
-import type { InferModel } from "drizzle-orm";
 import { useRouter, useSearchParams } from "next/navigation";
 
-type Playlist = InferModel<typeof playlists>;
-type PlaylistVideo = InferModel<typeof playlistVideos>;
-type Video = InferModel<typeof videos>;
+interface User {
+  id: number;
+  clerkId: string;
+  name: string;
+  email: string;
+  imageUrl: string;
+  createdAt: string;
+  updatedAt: string;
+  bannerUrl: string | null;
+  bannerKey: string | null;
+  subscribersCount: number;
+}
+
+interface Video {
+  id: number;
+  title: string;
+  description: string | null;
+  videoUrl: string;
+  thumbnailUrl: string;
+  duration: number;
+  views: number;
+  isPublished: boolean;
+  userId: string;
+  muxAssetId: string;
+  muxStatus: string;
+  muxUploadId: string;
+  categoryId: number | null;
+  createdAt: string;
+  updatedAt: string;
+  playbackId: string | null;
+  visibility: string;
+  user: User | null;
+}
+
+interface Playlist {
+  id: number;
+  name: string;
+  description: string | null;
+  userId: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 type PlaylistWithVideos = Playlist & {
   videos: { video: Video }[];
@@ -105,7 +141,7 @@ function PlaylistVideoSidebarContent({ playlistId }: PlaylistVideoSidebarProps) 
                                         {playlistVideo.video.title}
                                     </h3>
                                     <p className="text-sm text-muted-foreground">
-                                        {playlistVideo.video.user.username}
+                                        {playlistVideo.video.user?.name || "Usuario"}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
                                         {playlistVideo.video.views} vistas

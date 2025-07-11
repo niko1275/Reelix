@@ -3,24 +3,16 @@ import { trpc } from "@/utils/trpc"
 import { Suspense } from "react";
 import { PlaylistCard } from "./PlaylistCard"
 import { cn } from "@/lib/utils";
-import { playlists } from "@/lib/db/schema";
-import type { InferModel } from "drizzle-orm";
 
-type Playlist = InferModel<typeof playlists>;
-
-interface PlaylistSectionProps {
-    isExpanded?: boolean;
-}
-
-export default function PlaylistSection({ isExpanded = true }: PlaylistSectionProps) {
+export default function PlaylistSection() {
     return(
         <Suspense fallback={<div>Loading...</div>}>
-            <PlaylistSectionQuery isExpanded={isExpanded} />
+            <PlaylistSectionQuery />
         </Suspense>
     )
 }
 
-const PlaylistSectionQuery = ({ isExpanded }: PlaylistSectionProps) =>  {
+const PlaylistSectionQuery = () =>  {
     const [playlistsData] = trpc.playlist.getUserPlaylistsWithFirstVideo.useSuspenseQuery();
     
     if (!playlistsData?.length) {
@@ -40,21 +32,7 @@ const PlaylistSectionQuery = ({ isExpanded }: PlaylistSectionProps) =>  {
             {playlistsData.map((playlist) => (
                 <PlaylistCard
                     key={playlist.id}
-                    playlist={{
-                        ...playlist,
-                        createdAt: new Date(playlist.createdAt),
-                        updatedAt: new Date(playlist.updatedAt),
-                        user: { username: playlist.user.name },
-                        videos: playlist.firstVideo
-                            ? [{
-                                video: {
-                                    id: playlist.firstVideo.id,
-                                    title: playlist.firstVideo.title,
-                                    thumbnailUrl: playlist.firstVideo.thumbnailUrl
-                                }
-                            }]
-                            : []
-                    }}
+                    playlist={playlist}
                 />
             ))}
         </div>

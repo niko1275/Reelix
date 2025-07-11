@@ -2,14 +2,14 @@ import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { useState } from "react"
 
 interface VideoDescriptionProps {
-    description: string | null
-    compactView?: string
-    compactdate?: string
-    expandeddate: string
-    expandedView?: string
+    description: string;
+    publishedAt: string;
+    viewCount: number;
+    likeCount: number;
+    dislikeCount: number;
 }
 
-export default function VideoDescription({ description, compactView, compactdate, expandeddate, expandedView }: VideoDescriptionProps) {
+export default function VideoDescription({ description, publishedAt, viewCount }: VideoDescriptionProps) {
     const [expanded, setExpanded] = useState(false);
     
     return (
@@ -19,10 +19,10 @@ export default function VideoDescription({ description, compactView, compactdate
         >
             <div className="flex text-sm mb-2 gap-2">
                 <span className="font-medium">
-                    {expanded ? expandedView : compactView} views
+                    {viewCount} views
                 </span>
                 <span className="font-medium">
-                    { compactdate}
+                    {publishedAt}
                 </span>
             </div>
             <div className="relative w-full">

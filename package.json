@@ -23,6 +23,7 @@
     "@mux/mux-player-react": "^3.4.0",
     "@mux/mux-uploader": "^1.2.0",
     "@mux/mux-uploader-react": "^1.2.0",
+    "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.9",
     "@radix-ui/react-checkbox": "^1.3.2",
     "@radix-ui/react-dialog": "^1.1.14",

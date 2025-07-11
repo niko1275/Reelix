@@ -4,7 +4,7 @@ import { getUserByClerkId, updateUser, createUser } from '@/lib/controller/users
 import { TRPCError } from '@trpc/server';
 import { subscriptions, users, videos } from '@/lib/db/schema';
 import { eq, getTableColumns, sql } from 'drizzle-orm';
-import { json } from 'stream/consumers';
+
 
 export const userRouter = router({
   getProfile: publicProcedure

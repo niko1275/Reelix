@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface PlaylistInfoProps {
   title: string;
@@ -34,10 +35,12 @@ const PlaylistInfo: React.FC<PlaylistInfoProps> = ({
 
       {/* Channel info */}
       <div className="flex items-center gap-2 mb-1">
-        <img 
+        <Image
           src={channelAvatar}
           alt={`${channelName} avatar`}
-          className="w-6 h-6 rounded-full object-cover"
+          width={24}
+          height={24}
+          className="rounded-full object-cover"
         />
         <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">
           {channelName}

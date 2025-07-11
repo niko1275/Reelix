@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       inputs: [{ url: `mux://uploads/${uploadId}` }],
       playback_policy: ['public'],
       encoding_tier: 'baseline', // o 'smart' para mejor calidad
-    } as any);
+    });
     
     console.log('👉 Asset creado:', asset.id);
     

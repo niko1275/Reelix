@@ -7,12 +7,12 @@ import { toast } from "sonner";
 import { Loader2, Upload } from "lucide-react";
 
 export function NavbarCargarModal() {
-    const [isOpen, setIsOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isOpen, setIsOpen] = useState(false);
     const utils = trpc.useUtils();
 
     const createVideo = trpc.video.create.useMutation({
-        onSuccess: (data) => {
+        onSuccess: () => {
             toast.success("Video creado correctamente");
             utils.video.getMany.invalidate();
         },
@@ -23,7 +23,6 @@ export function NavbarCargarModal() {
 
     const handleUploadSuccess = () => {
         toast.success("Video subido correctamente");
-        setIsOpen(false);
         setSelectedFile(null);
         utils.video.getMany.invalidate();
     };

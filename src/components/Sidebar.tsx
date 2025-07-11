@@ -4,44 +4,24 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-import { useUser } from "@clerk/nextjs"
 import Link from "next/link"
-import { Home, SquarePlay, Video, History, ThumbsUp,ListVideo, Compass, PlaySquare, Clock, Flame, Music, Film, Newspaper, Trophy, Lightbulb, Gamepad} from "lucide-react"
+import { Home, ThumbsUp,PlaySquare, Clock} from "lucide-react"
 import SidebarHomeMobile from "./SidebarHomeMobile"
 
-
+import { trpc } from "@/utils/trpc";
+import { Image } from "@/components/ui/image";
 
 interface SidebarProps {
   isOpen: boolean
 }
 
+export function SidebarHome({ }: SidebarProps) {
 
-
-export function SidebarHome({ isOpen }: SidebarProps) {
-  const { user } = useUser()
   const { state , isMobile} = useSidebar()
   const isopen2 = state === "expanded"  ? true : false
 
-  
-
-  const userId = user?.id
-  const links = [
-    {
-      href: "/",
-      label: "Inicio",
-      icon: Home,
-    },
- 
-    {
-      href: "/subscriptions",
-      label: "Suscripciones",
-      icon: Video,
-    },
-  
-  ]
-
- 
- 
+  const { data: subscriptions } = trpc.subscriptions.getUserSubscriptions.useQuery();
+  console.log('Subscriptions:', subscriptions);
 
   if (isMobile) return <SidebarHomeMobile />
 
@@ -82,14 +62,12 @@ export function SidebarHome({ isOpen }: SidebarProps) {
         <hr className="border-t my-2" />
         
         {/* Subscriptions */}
-        {isopen2 && (
+        {isopen2 && subscriptions && subscriptions.length > 0 && (
           <div className="mb-4">
-            <h3 className="text-sm font-medium mb-2 px-4">SUBSCRIPTIONS</h3>
-            <SubscriptionItem name="MrBeast" imageUrl="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" />
-            <SubscriptionItem name="MKBHD" imageUrl="https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" />
-            <SubscriptionItem name="Veritasium" imageUrl="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" />
-            <SubscriptionItem name="Kurzgesagt" imageUrl="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" />
-            <SubscriptionItem name="TED" imageUrl="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" />
+            <h3 className="text-sm font-medium mb-2 px-4">SUSCRIPCIONES</h3>
+            {subscriptions.map(sub => (
+              <SubscriptionItem key={sub.id} name={sub.name} imageUrl={sub.imageUrl} />
+            ))}
           </div>
         )}
 
@@ -98,8 +76,6 @@ export function SidebarHome({ isOpen }: SidebarProps) {
     </aside>
   )
 };
-
-
 
 function SidebarItem({
   icon,
@@ -129,8 +105,13 @@ function SidebarItem({
 function SubscriptionItem({ name, imageUrl }: { name: string, imageUrl: string }) {
   return (
     <Link href="#" className="flex items-center py-2 px-4 hover:bg-secondary rounded-lg transition-colors mb-1">
-      <div className="h-6 w-6 rounded-full overflow-hidden">
-        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+      <div className="h-6 w-6 rounded-full overflow-hidden relative">
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          className="object-cover rounded-full"
+        />
       </div>
       <span className="ml-4 text-sm">{name}</span>
     </Link>

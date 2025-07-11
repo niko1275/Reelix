@@ -2,10 +2,10 @@ import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { subscriptions } from "@/lib/db/schema";
-import type { InferModel } from "drizzle-orm";
-import { TRPCError } from "@trpc/server";
 
-type Subscription = InferModel<typeof subscriptions>;
+import { TRPCError } from "@trpc/server";
+import { users } from "@/lib/db/schema";
+
 
 interface SubscriptionResponse {
   isSubscribed: boolean;
@@ -126,4 +126,22 @@ export const subscriptionsRouter = router({
         });
       }
     }),
+
+  getUserSubscriptions: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.auth?.userId;
+    if (!userId) return [];
+
+    // Join manual para obtener los datos del usuario suscrito
+    const subs = await ctx.db
+      .select({
+        id: users.clerkId,
+        name: users.name,
+        imageUrl: users.imageUrl,
+      })
+      .from(subscriptions)
+      .innerJoin(users, eq(subscriptions.subscribedToId, users.clerkId))
+      .where(eq(subscriptions.subscriberId, userId));
+
+    return subs;
+  }),
 }); 

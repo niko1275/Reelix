@@ -18,13 +18,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+
 } from "@/components/ui/dialog";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Switch } from "../ui/switch";
 import { Button } from "../ui/button";
+
 
 export interface VideoWithUserAndStats {
   id: number;
@@ -68,7 +69,7 @@ export interface VideoWithUserAndStats {
 }
 export function VideoCard({video}: {video: VideoWithUserAndStats}) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isHovered] = useState(false);
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");

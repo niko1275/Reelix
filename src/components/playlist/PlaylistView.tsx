@@ -3,9 +3,8 @@
 import PlaylistGrid from './PlaylistGrid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Music, PlayCircle } from 'lucide-react';
-import PlaylistHeader from './PlaylistHeader';
-import { playlistGetUserPlaylistsAndVideosPlaylistsOutput } from '@/modules/videos/types';
+import { PlusCircle, PlayCircle } from 'lucide-react';
+
 import { trpc } from '@/utils/trpc';
 import { Suspense } from 'react';
 
@@ -33,7 +32,7 @@ const PlaylistView = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <PlaylistHeader />
+   
       
       <div className="container px-4 md:px-6 mx-auto pb-12">
         <div className="flex justify-between items-center py-4">

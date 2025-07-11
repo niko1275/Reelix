@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from 'react';
-import { Search, Filter, Heart, Play, Clock, Eye, Calendar, Grid, List } from 'lucide-react';
+import { Search, Heart, Play, Eye, Calendar, Grid, List, VideoIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { trpc } from "@/utils/trpc"
-import { useAuth } from "@clerk/nextjs"
+import { SignInButton, useAuth, UserButton, useUser } from "@clerk/nextjs"
 import { SidebarTrigger } from '../ui/sidebar';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Video {
   id: string;
@@ -26,14 +26,13 @@ interface Video {
   muxUploadId:string;
 }
 
-const categories = ['All', 'Technology', 'Design', 'Travel', 'Lifestyle', 'Music', 'Sports'];
 
 export default function LikeVideosSection() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [sortBy, setSortBy] = useState('recent');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { userId } = useAuth();
+  const { isSignedIn } = useUser()
+  const { isLoaded } = useAuth()
 
   const { data } = trpc.videoReactions.getLikedVideos.useQuery({
     userId: userId || ""
@@ -61,16 +60,14 @@ export default function LikeVideosSection() {
       video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       video.channel.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
-      selectedCategory === 'All' || video.category === selectedCategory;
+      true || video.category === "All"; // Assuming "All" is the default or handled by search
     return matchesSearch && matchesCategory;
   }).sort((a, b) => {
-    switch (sortBy) {
-      case 'recent':
-        return new Date(b.likedDate).getTime() - new Date(a.likedDate).getTime();
-      case 'likes':
-        return parseInt((b.likes || "0").replace('K', '000').replace('M', '000000')) - parseInt((a.likes || "0").replace('K', '000').replace('M', '000000'));
-      case 'views':
-        return parseInt((b.views || "0").replace('K', '000').replace('M', '000000')) - parseInt((a.views || "0").replace('K', '000').replace('M', '000000'));
+    switch (true) { // Simplified sort logic
+      case new Date(b.likedDate).getTime() - new Date(a.likedDate).getTime() > 0:
+        return -1;
+      case new Date(b.likedDate).getTime() - new Date(a.likedDate).getTime() < 0:
+        return 1;
       default:
         return 0;
     }
@@ -92,10 +89,11 @@ export default function LikeVideosSection() {
  
     <Card className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-0 bg-white/80 backdrop-blur-sm">
       <div className="relative overflow-hidden rounded-t-lg">
-        <img
+        <Image
           src={video.thumbnail}
           alt={video.title}
-          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+          fill
+          className="object-cover rounded-t-lg"
         />
         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <Play className="w-12 h-12 text-white" fill="white" />
@@ -108,26 +106,18 @@ export default function LikeVideosSection() {
         <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
           {video.title}
         </h3>
-        <p className="text-gray-600 mb-3">{video.channel}</p>
+        
         <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
           <div className="flex items-center gap-1">
             <Eye className="w-4 h-4" />
             <span>{video.views} views</span>
           </div>
           <div className="flex items-center gap-1">
-            <Heart className="w-4 h-4 text-red-500" fill="currentColor" />
+           
             <span>{video.likes}</span>
           </div>
         </div>
-        <div className="flex items-center justify-between text-xs text-gray-400">
-          <div className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            <span>Liked {formatDate(video.likedDate)}</span>
-          </div>
-          <Badge variant="secondary" className="text-xs">
-            {video.category}
-          </Badge>
-        </div>
+      
       </CardContent>
     </Card>
     </Link>
@@ -138,10 +128,11 @@ export default function LikeVideosSection() {
       <CardContent className="p-4">
         <div className="flex gap-4">
           <div className="relative flex-shrink-0">
-            <img
+            <Image
               src={video.thumbnail}
               alt={video.title}
-              className="w-32 h-20 object-cover rounded-lg"
+              fill
+              className="object-cover rounded-lg"
             />
             <Badge className="absolute bottom-1 right-1 bg-black/80 text-white border-0 text-xs">
               {video.duration}
@@ -184,7 +175,6 @@ export default function LikeVideosSection() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <Heart className="w-8 h-8 text-red-500" fill="currentColor" />
                 <h1 className="text-2xl font-bold text-gray-900">Videos Que me gustaron</h1>
               </div>
               <Badge variant="secondary" className="ml-2">
@@ -207,6 +197,36 @@ export default function LikeVideosSection() {
                 <List className="w-4 h-4" />
               </Button>
             </div>
+            <div>
+            {isLoaded && !isSignedIn && (
+            <SignInButton mode="modal">
+              <Button variant="ghost">Sign In</Button>
+            </SignInButton>
+          )}
+
+          {isSignedIn && (
+            <UserButton afterSignOutUrl="/">
+              <UserButton.MenuItems>
+                <UserButton.Link
+                  href="/studio"
+                  label="Studio"
+                  labelIcon={
+                    <VideoIcon className="h-4 w-4" />
+                  }
+                />
+                  <UserButton.Link
+                  href={`/users/${userId}`}
+                  label="Ver tu canal"
+                  labelIcon={
+                    <VideoIcon className="h-4 w-4" />
+                  }
+                />
+              </UserButton.MenuItems>
+            </UserButton>
+
+            
+          )}
+            </div>
           </div>
 
           {/* Search and Filters */}
@@ -220,30 +240,12 @@ export default function LikeVideosSection() {
                 className="pl-10 bg-white/80"
               />
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full sm:w-48 bg-white/80">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-48 bg-white/80">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Most Recent</SelectItem>
-                <SelectItem value="likes">Most Liked</SelectItem>
-                <SelectItem value="views">Most Viewed</SelectItem>
-              </SelectContent>
-            </Select>
+        
           </div>
+          
         </div>
+
+        
       </div>
 
       {/* Main Content */}
@@ -267,6 +269,9 @@ export default function LikeVideosSection() {
           </div>
         )}
       </div>
+
+
+     
     </div>
   );
 }
