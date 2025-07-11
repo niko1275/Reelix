@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/utils/trpc";
 import { useRouter } from "next/navigation";
+import MuxUploader from "@mux/mux-uploader-react";
 
 interface UploadResponse {
-  uploadId: string;
   uploadUrl: string;
+  uploadId: string;
 }
-
 
 export function ModalCargarMux() {
   const router = useRouter();
@@ -22,10 +22,12 @@ export function ModalCargarMux() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState("public");
-  const [file, setFile] = useState<File | null>(null);
+  const [uploadUrl, setUploadUrl] = useState<string>("");
+  const [uploadId, setUploadId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const createVideoMutation = trpc.video.create.useMutation({
+  const createVideoMutation = trpc.video.createVideo.useMutation({
     onSuccess: (data) => {
       console.log("Video created:", data);
       setIsOpen(false);
@@ -36,59 +38,58 @@ export function ModalCargarMux() {
     },
   });
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
+  // Get upload URL when modal opens
+  useEffect(() => {
+    if (isOpen && !uploadUrl) {
+      getUploadUrl();
     }
-  };
+  }, [isOpen]);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!file) return;
-
-    setIsUploading(true);
-
+  const getUploadUrl = async () => {
+    setIsLoading(true);
     try {
-      // Step 1: Create upload URL
-      const uploadResponse = await fetch("/api/mux/upload", {
+      console.log("🔄 Getting upload URL...");
+      const response = await fetch("/api/mux/upload", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fileName: file.name,
-          fileSize: file.size,
+          fileName: "video.mp4", // Default name, will be overridden
+          fileSize: 0, // Will be set by MuxUploader
         }),
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to create upload URL");
+      console.log("📡 Response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Response error:", errorText);
+        throw new Error("Failed to get upload URL");
       }
 
-      const uploadData: UploadResponse = await uploadResponse.json();
+      const data: UploadResponse = await response.json();
+      console.log("✅ Upload data received:", data);
+      setUploadUrl(data.uploadUrl);
+      setUploadId(data.uploadId);
+    } catch (error) {
+      console.error("❌ Error getting upload URL:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      // Step 2: Upload file to Mux
-      const uploadToMux = await fetch(uploadData.uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-
-      if (!uploadToMux.ok) {
-        throw new Error("Failed to upload file to Mux");
-      }
-
-      // Step 3: Create asset
+  const handleUploadComplete = async () => {
+    setIsUploading(true);
+    try {
+      // Create asset
       const assetResponse = await fetch("/api/mux/create-asset", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          uploadId: uploadData.uploadId,
+          uploadId: uploadId,
         }),
       });
 
@@ -96,11 +97,15 @@ export function ModalCargarMux() {
         throw new Error("Failed to create asset");
       }
 
-      
-      // Step 4: Create video in database
-      createVideoMutation.mutate();
+      // Create video in database
+      createVideoMutation.mutate({
+        title,
+        description,
+        visibility,
+        muxUploadId: uploadId,
+      });
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("Error creating video:", error);
       setIsUploading(false);
     }
   };
@@ -114,7 +119,7 @@ export function ModalCargarMux() {
         <DialogHeader>
           <DialogTitle>Subir Video</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4">
           <div>
             <Label htmlFor="title">Título</Label>
             <Input
@@ -148,18 +153,23 @@ export function ModalCargarMux() {
             </Select>
           </div>
           <div>
-            <Label htmlFor="file">Archivo de video</Label>
-            <Input
-              id="file"
-              type="file"
-              accept="video/*"
-              onChange={handleFileChange}
-              required
-            />
+            <Label>Archivo de video</Label>
+            {isLoading ? (
+              <div className="p-4 text-center">Cargando uploader...</div>
+            ) : uploadUrl ? (
+              <MuxUploader
+                endpoint={uploadUrl}
+                onSuccess={handleUploadComplete}
+              />
+            ) : (
+              <div className="p-4 text-center text-red-500">Error al cargar el uploader</div>
+            )}
           </div>
-          <Button type="submit" disabled={isUploading || !file}>
-            {isUploading ? "Subiendo..." : "Subir Video"}
-          </Button>
+          {isUploading && (
+            <div className="text-center text-sm text-muted-foreground">
+              Subiendo video...
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>

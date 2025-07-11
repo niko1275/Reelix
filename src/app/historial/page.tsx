@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { Play, Clock, Trash2, Eye, Calendar } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Play, Clock, Trash2, Calendar } from "lucide-react";
+
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -41,7 +41,7 @@ export default function HistorialPage() {
 }
 
 const HistorialContent = () => {
-  const router = useRouter();
+ 
   const [isClearing, setIsClearing] = useState(false);
 
   const { data, isLoading, refetch } = trpc.watchHistory.getAll.useQuery();

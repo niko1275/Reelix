@@ -178,6 +178,52 @@ export const videoRouter = router({
       }
     }),
 
+    createVideo: protectedProcedure
+      .input(z.object({
+        title: z.string(),
+        description: z.string(),
+        visibility: z.string(),
+        muxUploadId: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        try {
+          const userId = ctx.auth?.userId;
+          const { title, description, visibility, muxUploadId } = input;
+
+          if (!userId) {
+            throw new TRPCError({
+              code: "UNAUTHORIZED",
+              message: "Usuario no autenticado",
+            });
+          }
+
+          const [video] = await db.insert(videos).values({
+            userId,
+            title,
+            description,
+            videoUrl: "",
+            thumbnailUrl: "",
+            duration: 0,
+            views: 0,
+            isPublished: false,
+            categoryId: 1,
+            muxAssetId: "",
+            muxStatus: "processing",
+            muxUploadId,
+            playbackId: "",
+            visibility,
+          }).returning();
+
+          return { video };
+        } catch (error) {
+          console.error("Error creating video:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Error al crear el video",
+          });
+        }
+      }),
+
 
     getById: optionalAuthProcedure
     .input(z.object({
