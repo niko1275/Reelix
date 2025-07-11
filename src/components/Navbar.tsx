@@ -7,6 +7,7 @@ import { UserButton, SignInButton, useUser, useAuth } from "@clerk/nextjs"
 import { SidebarTrigger } from "./ui/sidebar"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
+import Image from "next/image"
 
 
 export function Navbar() {
@@ -37,7 +38,12 @@ export function Navbar() {
     <header className="border-b">
       <div className="flex h-16 items-center px-6 gap-4 w-full">
         <SidebarTrigger />
-        
+        <Image 
+          src={'/images/Reelix.png'} 
+          alt="Reelix logo"
+          width={120}
+          height={40}
+        />
         {/* Contenedor de búsqueda */}
         <div className="flex-1 flex justify-center">
           <div className="relative w-full max-w-sm">

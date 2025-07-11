@@ -183,18 +183,31 @@ export default function LikeVideosSection() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
       <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
-      <SidebarTrigger/>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-gray-900">Videos Que me gustaron</h1>
-              </div>
-              <Badge variant="secondary" className="ml-2">
-                {filteredVideos.length} videos
-              </Badge>
+          {/* Nuevo header responsive */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            {/* Logo y sidebar */}
+            <div className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto">
+              <SidebarTrigger />
+              <Image 
+                src={'/images/Reelix.png'} 
+                alt="Reelix logo"
+                width={120}
+                height={40}
+                className="mx-auto sm:mx-0"
+              />
             </div>
-            <div className="flex items-center gap-2">
+            {/* Título y contador */}
+            <div className="flex flex-col items-center flex-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-gray-900 text-center">Videos Que me gustaron</h1>
+                <Badge variant="secondary" className="ml-2">
+                  {filteredVideos.length} videos
+                </Badge>
+              </div>
+            </div>
+            {/* Botones de usuario */}
+            <div className="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'outline'}
                 size="sm"
@@ -209,41 +222,31 @@ export default function LikeVideosSection() {
               >
                 <List className="w-4 h-4" />
               </Button>
-            </div>
-            <div>
-            {isLoaded && !isSignedIn && (
-            <SignInButton mode="modal">
-              <Button variant="ghost">Sign In</Button>
-            </SignInButton>
-          )}
-
-          {isSignedIn && (
-            <UserButton afterSignOutUrl="/">
-              <UserButton.MenuItems>
-                <UserButton.Link
-                  href="/studio"
-                  label="Studio"
-                  labelIcon={
-                    <VideoIcon className="h-4 w-4" />
-                  }
-                />
-                  <UserButton.Link
-                  href={`/users/${userId}`}
-                  label="Ver tu canal"
-                  labelIcon={
-                    <VideoIcon className="h-4 w-4" />
-                  }
-                />
-              </UserButton.MenuItems>
-            </UserButton>
-
-            
-          )}
+              {isLoaded && !isSignedIn && (
+                <SignInButton mode="modal">
+                  <Button variant="ghost">Sign In</Button>
+                </SignInButton>
+              )}
+              {isSignedIn && (
+                <UserButton afterSignOutUrl="/">
+                  <UserButton.MenuItems>
+                    <UserButton.Link
+                      href="/studio"
+                      label="Studio"
+                      labelIcon={<VideoIcon className="h-4 w-4" />}
+                    />
+                    <UserButton.Link
+                      href={`/users/${userId}`}
+                      label="Ver tu canal"
+                      labelIcon={<VideoIcon className="h-4 w-4" />}
+                    />
+                  </UserButton.MenuItems>
+                </UserButton>
+              )}
             </div>
           </div>
-
           {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 mt-2">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
               <Input
@@ -253,12 +256,8 @@ export default function LikeVideosSection() {
                 className="pl-10 bg-white/80"
               />
             </div>
-        
           </div>
-          
         </div>
-
-        
       </div>
 
       {/* Main Content */}

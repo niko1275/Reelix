@@ -12,8 +12,8 @@ interface Video {
   thumbnailUrl: string;
   duration: number;
   views: number;
-  publishedAt: string;
-  createdAt: string;
+  publishedAt: string | Date;
+  createdAt: string | Date;
 }
 
 interface VideoCardProps {
@@ -53,13 +53,29 @@ export function VideoCard({
         <div className="mt-1 flex text-xs text-muted-foreground">
           <span>{video.views} views</span>
           <span className="mx-1">•</span>
-          <span>{video.publishedAt}</span>
           <span>
-                    {formatDistanceToNow(new Date(video.createdAt), {
-                        addSuffix: true,
-                        locale: es,
-                    })}
-                </span>
+            {formatDistanceToNow(
+              typeof video.publishedAt === "string"
+                ? new Date(video.publishedAt)
+                : video.publishedAt,
+              {
+                addSuffix: true,
+                locale: es,
+              }
+            )}
+          </span>
+          <span className="mx-1">•</span>
+          <span>
+            {formatDistanceToNow(
+              typeof video.createdAt === "string"
+                ? new Date(video.createdAt)
+                : video.createdAt,
+              {
+                addSuffix: true,
+                locale: es,
+              }
+            )}
+          </span>
         </div>
       </div>
     </div>

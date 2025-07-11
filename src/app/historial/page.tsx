@@ -11,6 +11,8 @@ import { Play, Clock, Trash2, Calendar } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { SignInButton, useAuth, UserButton, useUser } from "@clerk/nextjs";
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface Video {
   id: number;
@@ -43,6 +45,8 @@ export default function HistorialPage() {
 const HistorialContent = () => {
  
   const [isClearing, setIsClearing] = useState(false);
+  const { isSignedIn } = useUser();
+  const { isLoaded, userId } = useAuth();
 
   const { data, isLoading, refetch } = trpc.watchHistory.getAll.useQuery();
   const clearHistoryMutation = trpc.watchHistory.clearHistory.useMutation({
@@ -150,16 +154,29 @@ const HistorialContent = () => {
       {/* Header */}
       <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-gray-900">Historial de Visualización</h1>
-              </div>
-              <Badge variant="secondary" className="ml-2">
-                {videos.length} videos
-              </Badge>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            {/* Logo y sidebar */}
+            <div className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto">
+              <SidebarTrigger />
+              <Image 
+                src={'/images/Reelix.png'} 
+                alt="Reelix logo"
+                width={120}
+                height={40}
+                className="mx-auto sm:mx-0"
+              />
             </div>
-            <div className="flex items-center gap-2">
+            {/* Título y contador */}
+            <div className="flex flex-col items-center flex-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-gray-900 text-center">Historial de Visualización</h1>
+                <Badge variant="secondary" className="ml-2">
+                  {videos.length} videos
+                </Badge>
+              </div>
+            </div>
+            {/* Botones de usuario y limpiar */}
+            <div className="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
@@ -170,6 +187,14 @@ const HistorialContent = () => {
                 <Trash2 className="w-4 h-4 mr-2" />
                 {isClearing ? "Limpiando..." : "Limpiar Historial"}
               </Button>
+              {isLoaded && !isSignedIn && (
+                <SignInButton mode="modal">
+                  <Button variant="ghost">Sign In</Button>
+                </SignInButton>
+              )}
+              {isSignedIn && (
+                <UserButton afterSignOutUrl="/" />
+              )}
             </div>
           </div>
         </div>
