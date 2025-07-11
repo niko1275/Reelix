@@ -82,22 +82,7 @@ export function ModalCargarMux() {
   const handleUploadComplete = async () => {
     setIsUploading(true);
     try {
-      // Create asset
-      const assetResponse = await fetch("/api/mux/create-asset", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          uploadId: uploadId,
-        }),
-      });
-
-      if (!assetResponse.ok) {
-        throw new Error("Failed to create asset");
-      }
-
-      // Create video in database
+      // Create video in database - Mux will create the asset automatically
       createVideoMutation.mutate({
         title,
         description,
