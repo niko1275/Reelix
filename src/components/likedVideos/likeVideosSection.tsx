@@ -16,7 +16,7 @@ interface Video {
   id: string;
   title: string;
   channel: string;
-  thumbnail: string;
+  thumbnailUrl: string;
   duration: string;
   views: string;
   likes: string;
@@ -40,19 +40,22 @@ export default function LikeVideosSection() {
   console.log('Data videos es '+JSON.stringify(data))
 
   // Mapear la data real a la estructura de Video
-  const realVideos: Video[] = (data?.likedVideos ?? []).map((item) => ({
-    id: item.videos.id.toString(),
-    title: item.videos.title,
-    channel: item.videos.userId ?? "", // Si tienes el nombre del canal, cámbialo aquí
-    thumbnail: item.videos.thumbnailUrl,
-    duration: item.videos.duration ? item.videos.duration.toString() : "",
-    views: item.videos.views?.toString() ?? "0",
-    likes: "", // Si tienes likes, cámbialo aquí
-    likedDate: item.video_reactions.createdAt,
-    category: item.videos.categoryId?.toString() ?? "",
-    uploadDate: item.videos.createdAt,
-    muxUploadId:item.videos.muxUploadId,
-  }));
+  const realVideos: Video[] = (data?.likedVideos ?? []).map((item) => {
+    console.log('Thumbnail URL:', item.videos.thumbnailUrl);
+    return {
+      id: item.videos.id.toString(),
+      title: item.videos.title,
+      channel: item.videos.userId ?? "", // Si tienes el nombre del canal, cámbialo aquí
+      thumbnailUrl: item.videos.thumbnailUrl || "https://via.placeholder.com/400x200?text=No+Thumbnail",
+      duration: item.videos.duration ? item.videos.duration.toString() : "",
+      views: item.videos.views?.toString() ?? "0",
+      likes: "", // Si tienes likes, cámbialo aquí
+      likedDate: item.video_reactions.createdAt,
+      category: item.videos.categoryId?.toString() ?? "",
+      uploadDate: item.videos.createdAt,
+      muxUploadId:item.videos.muxUploadId,
+    };
+  });
 
   // Filtros y ordenamiento sobre la data real
   const filteredVideos = realVideos.filter(video => {
@@ -88,12 +91,18 @@ export default function LikeVideosSection() {
     <Link href={`/videos/${video.muxUploadId}`}>
  
     <Card className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-0 bg-white/80 backdrop-blur-sm">
-      <div className="relative overflow-hidden rounded-t-lg">
+      <div className="relative overflow-hidden rounded-t-lg h-48">
         <Image
-          src={video.thumbnail}
+          src={video.thumbnailUrl}
           alt={video.title}
-          fill
-          className="object-cover rounded-t-lg"
+          width={400}
+          height={200}
+          className="object-cover rounded-t-lg w-full h-full"
+          unoptimized
+          onError={(e) => {
+            console.error('Error loading image:', video.thumbnailUrl);
+            e.currentTarget.src = "https://via.placeholder.com/400x200?text=Error+Loading+Image";
+          }}
         />
         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <Play className="w-12 h-12 text-white" fill="white" />
@@ -127,12 +136,18 @@ export default function LikeVideosSection() {
     <Card className="group cursor-pointer transition-all duration-300 hover:shadow-md border-0 bg-white/80 backdrop-blur-sm">
       <CardContent className="p-4">
         <div className="flex gap-4">
-          <div className="relative flex-shrink-0">
+          <div className="relative flex-shrink-0 w-32 h-20">
             <Image
-              src={video.thumbnail}
+              src={video.thumbnailUrl}
               alt={video.title}
-              fill
-              className="object-cover rounded-lg"
+              width={128}
+              height={80}
+              className="object-cover rounded-lg w-full h-full"
+              unoptimized
+              onError={(e) => {
+                console.error('Error loading image:', video.thumbnailUrl);
+                e.currentTarget.src = "https://via.placeholder.com/128x80?text=Error";
+              }}
             />
             <Badge className="absolute bottom-1 right-1 bg-black/80 text-white border-0 text-xs">
               {video.duration}
@@ -149,16 +164,14 @@ export default function LikeVideosSection() {
                 <span>{video.views} views</span>
               </div>
               <div className="flex items-center gap-1">
-                <Heart className="w-4 h-4 text-red-500" fill="currentColor" />
+
                 <span>{video.likes}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
                 <span>Liked {formatDate(video.likedDate)}</span>
               </div>
-              <Badge variant="secondary" className="text-xs">
-                {video.category}
-              </Badge>
+         
             </div>
           </div>
         </div>

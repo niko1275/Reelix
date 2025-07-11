@@ -32,6 +32,7 @@ export const watchHistoryRouter = router({
             thumbnailUrl: videos.thumbnailUrl,
             duration: videos.duration,
             userId: videos.userId,
+            muxUploadId:videos.muxUploadId
         
           }
         })
@@ -119,6 +120,25 @@ export const watchHistoryRouter = router({
       } catch (error) {
         console.error("Error deleting watch history:", error);
         throw new Error("Error al eliminar el historial");
+      }
+    }),
+
+  clearHistory: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      const userId = ctx.auth?.userId;
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+
+      try {
+        await ctx.db
+          .delete(watchHistory)
+          .where(eq(watchHistory.userId, userId));
+
+        return { success: true };
+      } catch (error) {
+        console.error("Error clearing watch history:", error);
+        throw new Error("Error al limpiar el historial");
       }
     }),
 }); 
