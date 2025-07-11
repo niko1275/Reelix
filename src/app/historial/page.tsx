@@ -46,7 +46,7 @@ const HistorialContent = () => {
  
   const [isClearing, setIsClearing] = useState(false);
   const { isSignedIn } = useUser();
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded } = useAuth();
 
   const { data, isLoading, refetch } = trpc.watchHistory.getAll.useQuery();
   const clearHistoryMutation = trpc.watchHistory.clearHistory.useMutation({

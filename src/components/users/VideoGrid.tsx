@@ -1,7 +1,5 @@
 import { VideoCard } from "./VideoCard";
 import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
-
 
 interface Video {
   id: number;
