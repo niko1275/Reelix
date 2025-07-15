@@ -543,7 +543,7 @@ export const videoRouter = router({
           const hasMore = result.length > limit;
           const items = hasMore ? result.slice(0, -1) : result;
 
-      
+          console.log(items)
 
           return {
             items: items,

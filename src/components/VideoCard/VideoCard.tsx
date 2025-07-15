@@ -25,6 +25,8 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Switch } from "../ui/switch";
 import { Button } from "../ui/button";
+import { Avatar } from "../ui/avatar";
+import { UserAvatar } from "../user-avatar/user-avatar";
 
 
 export interface VideoWithUserAndStats {
@@ -164,8 +166,14 @@ export function VideoCard({video}: {video: VideoWithUserAndStats}) {
           <div className="mt-2 space-y-1">
             {/* Título + botón de opciones al lado */}
             <div className="flex items-start justify-between">
-              <h3 className="font-medium line-clamp-2 text-sm">{video.title}</h3>
-  
+              <div className="flex gap-2">
+
+               <UserAvatar imageUrl={video.user.imageUrl} name={video.user.name} />
+              
+               <h3 className="font-medium line-clamp-2 text-lg">{video.title}</h3>
+              </div>
+              
+             
               {/* Botón fuera del Link pero dentro del layout visual */}
               <div onClick={(e) => e.preventDefault()}>
                 <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -261,9 +269,11 @@ export function VideoCard({video}: {video: VideoWithUserAndStats}) {
             </Dialog>
               </div>
             </div>
+
+            
   
             {/* Stats */}
-            <div className="flex text-xs text-muted-foreground">
+            <div className="flex text-xs text-muted-foreground ml-11">
               <span>{video.stats.views} views</span>
               <span className="mx-1">•</span>
               <span>
