@@ -11,6 +11,7 @@ import { SignInButton, useAuth, UserButton, useUser } from "@clerk/nextjs"
 import { SidebarTrigger } from '../ui/sidebar';
 import Link from 'next/link';
 import Image from 'next/image';
+import ProtectedContent from '../auth/ProtectedContent';
 
 interface Video {
   id: string;
@@ -34,9 +35,19 @@ export default function LikeVideosSection() {
   const { isSignedIn } = useUser()
   const { isLoaded } = useAuth()
 
-  const { data } = trpc.videoReactions.getLikedVideos.useQuery({
+  const { data,error } = trpc.videoReactions.getLikedVideos.useQuery({
     userId: userId || ""
   });
+
+  if (error?.data?.code === 'NOT_FOUND') {
+            return (
+                <ProtectedContent
+                    title="Accede a la sección de Videos que te gustaron"
+                    description="Inicia sesión para Acceder a la sección de Videos que te gustaron"
+                    buttonText="Iniciar Sesión"
+                />
+            )
+        }
   console.log('Data videos es '+JSON.stringify(data))
 
   // Mapear la data real a la estructura de Video
@@ -86,6 +97,9 @@ export default function LikeVideosSection() {
     if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
     return `${Math.ceil(diffDays / 30)} months ago`;
   };
+
+  
+
 
   const VideoCard = ({ video }: { video: Video }) => (
     <Link href={`/videos/${video.muxUploadId}`}>

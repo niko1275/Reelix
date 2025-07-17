@@ -3,6 +3,7 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { videoReactions, videos } from "@/lib/db/schema";
 import type { InferModel } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 type VideoReaction = InferModel<typeof videoReactions>;
 
@@ -103,11 +104,18 @@ export const videoReactionsRouter = router({
       }
     }),
 
-    getLikedVideos: optionalAuthProcedure
+  getLikedVideos: optionalAuthProcedure
   .input(z.object({
     userId: z.string(),
   }))
   .query(async ({ ctx, input }) => {
+     const userId = ctx.auth?.userId;
+    console.log("🔐 User ID:", userId);
+    if (!userId) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Resource not found',
+      });}
     
 
     const likedVideos = await ctx.db

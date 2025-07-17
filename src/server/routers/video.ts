@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { router, protectedProcedure, publicProcedure, optionalAuthProcedure } from '../trpc';
-import { users, videos, videoViews, videoReactions, subscriptions } from '@/lib/db/schema';
+import { users, videos, videoViews, videoReactions, subscriptions, categories } from '@/lib/db/schema';
 import { and, desc, eq, getTableColumns, lt, not, or, sql } from 'drizzle-orm';
 import db from '@/lib/db/db';
 import { TRPCError } from '@trpc/server';
@@ -523,12 +523,18 @@ export const videoRouter = router({
                   LIMIT 1
                 )` : sql<string>`null`,
               },
+              categoria:{
+                  ...getTableColumns(categories),
+
+              },
             })
             .from(videos)
             .leftJoin(users, eq(videos.userId, users.clerkId))
+            .leftJoin(categories, eq(videos.categoryId, categories.id))
             .where(and(
               eq(videos.visibility, "public"),
               eq(videos.isPublished, true),
+              eq(videos.categoryId,categories.id),
               cursor ? lt(videos.createdAt, new Date(cursor)) : undefined,
               search ? or(
                 sql`LOWER(${videos.title}) LIKE LOWER(${`%${search}%`})`,

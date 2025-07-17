@@ -16,7 +16,7 @@ import { Home, ThumbsUp, PlaySquare, HistoryIcon } from "lucide-react"
 
 import { trpc } from "@/utils/trpc";
 import Image from "next/image";
-
+import { usePathname } from 'next/navigation';
 
 function SidebarItem({
   icon,
@@ -62,30 +62,31 @@ function SubscriptionItem({ name, imageUrl }: { name: string; imageUrl: string }
 export default function SidebarHomeMobile() {
     const { state } = useSidebar()
     const isopen2 = state === "expanded"  ? true : false
-
+    const pathname = usePathname();
     const { data: subscriptions } = trpc.subscriptions.getUserSubscriptions.useQuery();
 
     return(
-<Sidebar className="border-r overflow-hidden">
+  <Sidebar className="border-r overflow-hidden">
       <SidebarContent className="p-6">
         <SidebarGroup>
           <SidebarGroupLabel className="text-lg font-semibold mb-6" />
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-8">
+            <SidebarMenu className="">
            
-
-            <Link href="/">
-          <SidebarItem icon={<Home />} text="Home" isOpen={isopen2} active />
+          <Image 
+                src={'/images/Reelix.png'} 
+                alt="Reelix logo"
+                width={120}
+                height={40}
+                className="mx-auto sm:mx-0"
+              />
+            <Link href="/" className="">
+          <SidebarItem icon={<Home />} text="Home" isOpen={isopen2}  active={pathname === '/'} />
           </Link>
          
-          <Link href="/subscriptions">
-          <SidebarItem icon={<PlaySquare />} text="Subscriptions" isOpen={isopen2} />
-          </Link>
-   
-
        
           <Link href="/playlist">
-          <SidebarItem icon={<PlaySquare />} text="Playlists" isOpen={isopen2} />
+          <SidebarItem icon={<PlaySquare />} text="Playlists" isOpen={isopen2}   active={pathname === '/playlist'} />
           </Link>
 
           <Link href="/historial">

@@ -25,7 +25,6 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Switch } from "../ui/switch";
 import { Button } from "../ui/button";
-import { Avatar } from "../ui/avatar";
 import { UserAvatar } from "../user-avatar/user-avatar";
 
 
@@ -43,8 +42,8 @@ export interface VideoWithUserAndStats {
   muxStatus: string;
   muxUploadId: string;
   categoryId: number;
-  createdAt: string; // o Date si ya lo parseas
-  updatedAt: string; // o Date
+  createdAt: string; 
+  updatedAt: string;
   playbackId: string;
   visibility: 'public' | 'private' | 'unlisted';
 
@@ -68,6 +67,15 @@ export interface VideoWithUserAndStats {
     dislikes: number;
     userReaction: 'like' | 'dislike' | null;
   };
+
+   categoria:{
+        id: number;
+        name: string;
+        description: string;
+        imageUrl: string;
+        createdAt: string; 
+        updatedAt: string; 
+    };
 }
 export function VideoCard({video}: {video: VideoWithUserAndStats}) {
   const [isOpen, setIsOpen] = useState(false);
@@ -166,12 +174,17 @@ export function VideoCard({video}: {video: VideoWithUserAndStats}) {
           <div className="mt-2 space-y-1">
             {/* Título + botón de opciones al lado */}
             <div className="flex items-start justify-between">
-              <div className="flex gap-2">
+              <div className="flex gap-2 ">
 
                <UserAvatar imageUrl={video.user.imageUrl} name={video.user.name} />
+              <div className="flex flex-col">
+
               
                <h3 className="font-medium line-clamp-2 text-lg">{video.title}</h3>
+               <p className="text-gray-500">{video.user.name}</p>
+               </div>
               </div>
+              
               
              
               {/* Botón fuera del Link pero dentro del layout visual */}
@@ -270,8 +283,7 @@ export function VideoCard({video}: {video: VideoWithUserAndStats}) {
               </div>
             </div>
 
-            
-  
+
             {/* Stats */}
             <div className="flex text-xs text-muted-foreground ml-11">
               <span>{video.stats.views} views</span>
@@ -282,6 +294,7 @@ export function VideoCard({video}: {video: VideoWithUserAndStats}) {
                   locale: es,
                 })}
               </span>
+              <span className="ml-2 rounded-2xl  bg-black text-white font-bold p-1">{video.categoria.name}</span>
             </div>
           </div>
         </div>

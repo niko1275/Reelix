@@ -46,6 +46,15 @@ export interface VideoWithUserAndStats {
       dislikes: number;
       userReaction: 'like' | 'dislike' | null;
     };
+
+    categoria:{
+        id: number;
+        name: string;
+        description: string;
+        imageUrl: string;
+        createdAt: string; 
+        updatedAt: string; 
+    };
 }
 
 const VideoSkeleton = () => {
