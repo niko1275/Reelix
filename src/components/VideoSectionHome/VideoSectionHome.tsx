@@ -106,7 +106,7 @@ const VideoSectionQuery = (): JSX.Element => {
     console.log("🧪 videos:", JSON.stringify(videos, null, 2))
 
     return (
-        <div className="space-y-4 mt-10 mx-20">
+        <div className="space-y-4 mt-10 sm:mx-20 ">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {videos.map((video) => (
                     

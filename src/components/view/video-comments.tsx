@@ -212,7 +212,7 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
                 </p>
               )}
               <p className="mt-1">{comment.content}</p>
-              <div className="flex items-center gap-4 mt-2">
+              <div className="flex items-center gap-4 mt-2 ">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleReaction('like')}
@@ -246,12 +246,15 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
                 </button>
                 {userId === comment.user.clerkId && (
                   <>
+                  <div className="flex sm:flex-row flex-col">
+
+                  
                     <button
                       onClick={() => {
                         setEditingComment(comment.id)
                         setEditContent(comment.content)
                       }}
-                      className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                      className="flex items-center mr-2 gap-1 text-sm text-muted-foreground hover:text-foreground"
                     >
                       <Edit className="w-4 h-4" />
                       Editar
@@ -263,6 +266,7 @@ export const VideoComments = ({ videoId }: VideoCommentsProps) => {
                       <Trash2 className="w-4 h-4" />
                       Eliminar
                     </button>
+                    </div>
                   </>
                 )}
               </div>

@@ -1,4 +1,4 @@
-import { router, protectedProcedure, optionalAuthProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { videoReactions, videos } from "@/lib/db/schema";
@@ -104,11 +104,10 @@ export const videoReactionsRouter = router({
       }
     }),
 
-  getLikedVideos: optionalAuthProcedure
+  getLikedVideos: protectedProcedure
   .input(z.object({
-    userId: z.string(),
   }))
-  .query(async ({ ctx, input }) => {
+  .query(async ({ ctx }) => {
      const userId = ctx.auth?.userId;
     console.log("🔐 User ID:", userId);
     if (!userId) {
@@ -125,7 +124,7 @@ export const videoReactionsRouter = router({
     
       .where(
         and(
-          eq(videoReactions.userId, input.userId),
+          eq(videoReactions.userId, userId),
           eq(videoReactions.type, "like")
         )
       )

@@ -3,6 +3,7 @@ import { z } from "zod"
 import { subscriptions, users } from "@/lib/db/schema"
 import { eq, and, sql } from "drizzle-orm"
 import { router,protectedProcedure } from "../trpc"
+import { TRPCError } from "@trpc/server"
 
 
 export const subscriptionsRouter = router({
@@ -105,7 +106,12 @@ export const subscriptionsRouter = router({
 
   getUserSubscriptions: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.auth?.userId;
-    if (!userId) return [];
+     if (!ctx.auth?.userId) {
+       throw new TRPCError({
+         code: "NOT_FOUND",
+         message: "You must be logged in to access this resource",
+       });
+     }
 
     // Join manual para obtener los datos del usuario suscrito
     const subs = await ctx.db
@@ -116,7 +122,7 @@ export const subscriptionsRouter = router({
       })
       .from(subscriptions)
       .innerJoin(users, eq(subscriptions.subscribedToId, users.clerkId))
-      .where(eq(subscriptions.subscriberId, userId));
+      .where(eq(subscriptions.subscriberId, userId || ""));
 
     return subs;
   }),

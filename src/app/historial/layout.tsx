@@ -14,7 +14,7 @@ export default async function LikedVideosLayout({ children }: { children: React.
           <div className="flex flex-1">
           <SidebarHome isOpen={defaultOpen} />
           <main className="flex-1 p-4 overflow-auto">
-            <HeaderHistorial/>
+            <HeaderHistorial title="Historial de Visualización"/>
             {children}
           </main>
         </div>

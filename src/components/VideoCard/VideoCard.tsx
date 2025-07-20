@@ -285,16 +285,19 @@ export function VideoCard({video}: {video: VideoWithUserAndStats}) {
 
 
             {/* Stats */}
-            <div className="flex text-xs text-muted-foreground ml-11">
-              <span>{video.stats.views} views</span>
-              <span className="mx-1">•</span>
-              <span>
-                {formatDistanceToNow(new Date(video.createdAt), {
-                  addSuffix: true,
-                  locale: es,
-                })}
-              </span>
-              <span className="ml-2 rounded-2xl  bg-black text-white font-bold p-1">{video.categoria.name}</span>
+            <div className="flex text-xs text-muted-foreground ml-11 flex-col">
+              <div className="flex sm:flex-row flex-col gap-2">   
+                <span>{video.stats.views} views</span>
+                
+                <span>
+                  •
+                  {formatDistanceToNow(new Date(video.createdAt), {
+                    addSuffix: true,
+                    locale: es,
+                  })}
+                </span>
+              </div>
+              <span className=" rounded-2xl   text-black font-bold p-1">{video.categoria.name}</span>
             </div>
           </div>
         </div>

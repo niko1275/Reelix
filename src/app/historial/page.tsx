@@ -49,6 +49,19 @@ const HistorialContent = () => {
   const { isSignedIn } = useUser();
   const { isLoaded } = useAuth();
 
+
+  if(!isSignedIn){
+ 
+      return (
+         <ProtectedContent
+             title="Accede a la sección de Videos que te gustaron"
+             description="Inicia sesión para Acceder a la sección de Videos que te gustaron"
+             buttonText="Iniciar Sesión"
+         />
+     )
+ }
+  
+
   const { data, isLoading, refetch,error } = trpc.watchHistory.getAll.useQuery();
   const clearHistoryMutation = trpc.watchHistory.clearHistory.useMutation({
     onSuccess: () => {

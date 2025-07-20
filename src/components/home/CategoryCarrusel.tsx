@@ -37,7 +37,7 @@ const CategoryCarousel = () => {
   const [showRightArrow, setShowRightArrow] = useState<boolean>(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Check if scrolling is needed and update arrow visibility
+  
   const checkScrollPosition = () => {
     const container = containerRef.current;
     if (!container) return;

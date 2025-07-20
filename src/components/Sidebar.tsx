@@ -33,11 +33,6 @@ export function SidebarHome({ }: SidebarProps) {
           <Link href="/">
           <SidebarItem icon={<Home />} text="Home" isOpen={isopen2} active />
           </Link>
-         
-          <Link href="/subscriptions">
-          <SidebarItem icon={<PlaySquare />} text="Subscriptions" isOpen={isopen2} />
-          </Link>
-   
 
        
           <Link href="/playlist">

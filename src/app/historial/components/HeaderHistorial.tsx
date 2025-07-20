@@ -2,7 +2,12 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import Image from 'next/image'
 import React from 'react'
 
-export const HeaderHistorial = () => {
+interface HeaderHistorialProps {
+  title: string;
+}
+
+
+export const HeaderHistorial:React.FC<HeaderHistorialProps> = ({title}) => {
   return (
     <div>
         
@@ -21,7 +26,7 @@ export const HeaderHistorial = () => {
                 {/* Título y contador */}
                 <div className="flex flex-col items-center flex-1">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-bold text-gray-900 text-center">Historial de Visualización</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 text-center">{title}</h1>
                    
                   </div>
                 </div>

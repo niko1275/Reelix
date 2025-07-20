@@ -8,7 +8,7 @@ interface VideoSidebarProps {
 
 export function VideoSidebar({ currentVideoId }: VideoSidebarProps) {
   return (
-    <div className="w-full lg:w-80 space-y-4">
+    <div className="w-full xl:w-80 space-y-4">
       <Suggestions id={currentVideoId} />
     </div>
   );

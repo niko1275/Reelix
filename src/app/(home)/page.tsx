@@ -4,7 +4,8 @@ import { VideoSectionHome } from "@/components/VideoSectionHome/VideoSectionHome
 import { HydrateClient, trpc } from "@/server/server";
 
 export default async function Home() {
-    
+
+
     await Promise.all([
          trpc.category.getAll.prefetch(),
         trpc.video.getHomeVideos.prefetchInfinite({

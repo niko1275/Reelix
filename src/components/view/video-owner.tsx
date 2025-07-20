@@ -70,7 +70,7 @@ export default function VideoOwner({ video }: VideoTopRowProps) {
         <div className="flex items-center sm:items-start justify-between sm:justify-start gap-3">
             <Link href={`/users/${video.user.clerkId}`} className="flex items-center gap-2 flex-col">
                 <div className="flex items-center gap-2">
-                    <Avatar className="h-20 w-20">
+                    <Avatar className="h-20 w-20  ">
                         <AvatarImage src={video.user.imageUrl} />
                         <AvatarFallback>
                             {video.user.name}

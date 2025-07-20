@@ -1,27 +1,23 @@
 import { SidebarHome } from "@/components/Sidebar";
 import { cookies } from "next/headers";
 import { SidebarProvider } from "@/components/ui/sidebar";
-// Layout personalizado para la sección de liked videos, sin navbar global
+import { HeaderHistorial } from "../historial/components/HeaderHistorial";
 export default async function LikedVideosLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies()
-  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
   return (
-
     <div>
       <SidebarProvider defaultOpen={defaultOpen}>
         <div className="h-screen w-full flex flex-col">
+          
           <div className="flex flex-1">
-          <SidebarHome isOpen={defaultOpen} />
-          <main className="flex-1 p-4 overflow-auto">
-            {children}
-          </main>
+            <SidebarHome isOpen={defaultOpen} />
+            <main className="flex-1 p-4 overflow-auto">
+              <HeaderHistorial title="Videos que me gustaron"/>
+              {children}
+            </main>
+          </div>
         </div>
-
-       
-        </div>
-       
-        
-       
       </SidebarProvider>
     </div>
   );
